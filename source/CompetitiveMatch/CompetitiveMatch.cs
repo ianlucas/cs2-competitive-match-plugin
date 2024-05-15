@@ -5,6 +5,7 @@
 
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
+using CounterStrikeSharp.API.Modules.Events;
 
 namespace CompetitiveMatch;
 
@@ -19,6 +20,7 @@ public partial class CompetitiveMatch : BasePlugin
     public override void Load(bool hotReload)
     {
         match_bot_fill.ValueChanged += HandleMatchBotFillValueChanged;
-        StartWarmup();
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnTick>(OnTick);
     }
 }

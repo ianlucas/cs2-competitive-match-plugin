@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-using CounterStrikeSharp.API;
-
 namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
@@ -16,15 +14,31 @@ public partial class CompetitiveMatch
             ExecuteCommands(new List<string>
             {
                 "bot_quota_mode fill",
-                $"bot_quota {match_max_players}"
+                $"bot_quota {match_max_players.Value}"
             });
-        } else
+        }
+        else
         {
             ExecuteCommands(new List<string>
             {
                 "bot_quota_mode fill",
                 "bot_quota 0"
             });
+        }
+    }
+
+    public void OnMapStart(string mapname)
+    {
+        IsInitialized = false;
+    }
+
+    public void OnTick()
+    {
+        if (!IsInitialized)
+        {
+            HandleMatchBotFillValueChanged(null, false);
+            StartWarmup();
+            IsInitialized = true;
         }
     }
 }
