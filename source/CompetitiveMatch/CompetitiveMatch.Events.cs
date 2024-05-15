@@ -5,6 +5,7 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
 namespace CompetitiveMatch;
@@ -40,29 +41,71 @@ public partial class CompetitiveMatch
     {
         if (!IsInitialized)
         {
-            PlayerReadyManager.Clear();
-            HandleMatchBotFillChange(null, false);
-            StartWarmup();
+            PlayerStateManager.Clear();
+            HandleMatchBotFillChange(null, match_bot_fill.Value);
+            ExecuteWarmup();
             IsInitialized = true;
         }
 
-        if (Phase == MatchPhase.Warmup)
+        if (Phase == MatchPhase.Warmup || Phase == MatchPhase.KnifeVote)
         {
             Utilities.GetPlayers().ForEach(player =>
             {
                 var builder = new StringBuilder();
-                var isReady = PlayerReadyManager.GetValueOrDefault(player.SteamID, false);
-                builder.Append("<b><font class='fontSize-s' color='silver'>");
-                builder.Append(match_hostname.Value);
-                builder.Append("</font><b/><br><font class='fontSize-l' color='");
-                builder.Append(isReady ? "lime" : "red");
-                builder.Append("'>");
-                builder.Append(isReady ? "READY" : "NOT READY");
-                builder.Append("</font><br>");
-                builder.Append(isReady ? "Waiting other players..." : "Type !ready to be ready");
-                player.PrintToCenterHtml(builder.ToString());
+                switch (Phase)
+                {
+                    case MatchPhase.Warmup:
+                        var isReady = GetPlayerState(player).IsReady;
+                        player.PrintToCenterHtml(
+                            GetStateString(
+                                color: isReady ? "lime" : "red",
+                                state: isReady ? "READY" : "NOT READY",
+                                description: isReady ? "Waiting other players..." : "Type !ready to be ready"));
+                        break;
+
+                    case MatchPhase.KnifeVote:
+                        // when round starts must restart the game and keep the players in their current team.
+                        var inWinnerTeam = player.Team == KnifeWinner;
+                        player.PrintToCenterHtml(
+                            GetStateString(
+                                color: inWinnerTeam ? "lime" : "red",
+                                state: inWinnerTeam ? "WON KNIFE ROUND" : "LOST KNIFE ROUND",
+                                description: inWinnerTeam ? "Type !stay (to stay) or !switch (to swich) team sides." : "Waiting opponent team..."));
+                        break;
+                }
+
             });
         }
+    }
+
+    public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo _)
+    {
+        if (Phase == MatchPhase.Knife)
+        {
+            var knifeWinner = GetKnifeWinner();
+            int reason = 10;
+            switch (knifeWinner)
+            {
+                case CsTeam.CounterTerrorist:
+                    reason = 8;
+                    break;
+                case CsTeam.Terrorist:
+                    reason = 9;
+                    break;
+            }
+            @event.Reason = reason;
+            // @todo: need to reverse this, isn't working
+            KnifeWinner = knifeWinner;
+            Phase = MatchPhase.KnifeVote;
+            foreach (var player in Utilities.GetPlayers()
+                .Where(player => player.PawnIsAlive))
+            {
+                player.PrintToChat($"reason is {reason}");
+                FreezePlayer(player);
+            }
+            return HookResult.Changed;
+        }
+        return HookResult.Continue;
     }
 
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo _)
@@ -72,7 +115,7 @@ public partial class CompetitiveMatch
         {
             if (Phase == MatchPhase.Warmup)
             {
-                PlayerReadyManager.Remove(player.SteamID);
+                PlayerStateManager.Remove(player.SteamID);
             }
         }
         return HookResult.Continue;

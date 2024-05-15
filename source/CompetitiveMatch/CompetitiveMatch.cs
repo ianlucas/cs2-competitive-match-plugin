@@ -22,6 +22,7 @@ public partial class CompetitiveMatch : BasePlugin
         match_bot_fill.ValueChanged += HandleMatchBotFillChange;
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnTick>(OnTick);
+        RegisterEventHandler<EventRoundEnd>(OnRoundEnd, HookMode.Pre);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
     }
 }

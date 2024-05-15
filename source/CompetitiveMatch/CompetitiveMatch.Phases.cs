@@ -7,12 +7,14 @@ namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
 {
-    public void StartWarmup()
+    public void ExecuteWarmup()
     {
         ExecuteCommands(new List<string>
         {
             "sv_hibernate_when_empty 0",
             "mp_weapons_allow_typecount -1",
+            "mp_ct_default_secondary weapon_hkp2000",
+            "mp_t_default_secondary weapon_glock",
             "mp_warmup_start",
             "mp_warmup_pausetimer 1",
             "mp_autoteambalance 0",
@@ -21,21 +23,24 @@ public partial class CompetitiveMatch
         });
     }
 
-    public void StartKnife()
+    public void ExecuteKnife()
     {
+        var knifeFreezeTime = 5; //30
         ExecuteCommands(new List<string>
         {
             "mp_ct_default_secondary \"\"",
-            "mp_ct_default_secondary \"\"",
-            "mp_freezetime 30",
+            "mp_t_default_secondary \"\"",
+            $"mp_freezetime {knifeFreezeTime}",
             "mp_roundtime 120",
             "mp_round_restart_delay 120",
+            "mp_give_player_c4 0",
+            "mp_startmoney 0",
             "mp_warmup_end",
             "mp_warmup_pausetimer 0"
         });
     }
 
-    public void StartLive()
+    public void ExecuteLive()
     {
         ExecuteCommands(new List<string>
         {
