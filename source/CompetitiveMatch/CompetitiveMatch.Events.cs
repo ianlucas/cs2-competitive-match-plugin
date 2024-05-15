@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using System.Text;
+
 namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
 {
-    public void HandleMatchBotFillValueChanged(object? sender, bool value)
+    public void HandleMatchBotFillChange(object? sender, bool value)
     {
         if (value)
         {
@@ -36,9 +40,41 @@ public partial class CompetitiveMatch
     {
         if (!IsInitialized)
         {
-            HandleMatchBotFillValueChanged(null, false);
+            PlayerReadyManager.Clear();
+            HandleMatchBotFillChange(null, false);
             StartWarmup();
             IsInitialized = true;
         }
+
+        if (Phase == MatchPhase.Warmup)
+        {
+            Utilities.GetPlayers().ForEach(player =>
+            {
+                var builder = new StringBuilder();
+                var isReady = PlayerReadyManager.GetValueOrDefault(player.SteamID, false);
+                builder.Append("<b><font class='fontSize-s' color='silver'>");
+                builder.Append(match_hostname.Value);
+                builder.Append("</font><b/><br><font class='fontSize-l' color='");
+                builder.Append(isReady ? "lime" : "red");
+                builder.Append("'>");
+                builder.Append(isReady ? "READY" : "NOT READY");
+                builder.Append("</font><br>");
+                builder.Append(isReady ? "Waiting other players..." : "Type !ready to be ready");
+                player.PrintToCenterHtml(builder.ToString());
+            });
+        }
+    }
+
+    public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo _)
+    {
+        var player = @event.Userid;
+        if (player != null)
+        {
+            if (Phase == MatchPhase.Warmup)
+            {
+                PlayerReadyManager.Remove(player.SteamID);
+            }
+        }
+        return HookResult.Continue;
     }
 }

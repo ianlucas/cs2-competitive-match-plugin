@@ -19,8 +19,9 @@ public partial class CompetitiveMatch : BasePlugin
 
     public override void Load(bool hotReload)
     {
-        match_bot_fill.ValueChanged += HandleMatchBotFillValueChanged;
+        match_bot_fill.ValueChanged += HandleMatchBotFillChange;
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnTick>(OnTick);
+        RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
     }
 }

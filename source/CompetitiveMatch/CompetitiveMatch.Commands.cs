@@ -4,25 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Commands;
 
 namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
 {
-    public void ExecuteCommands(List<string> commands)
+    [ConsoleCommand("css_ready", "Mark yourself as ready.")]
+    public void OnReadyCommand(CCSPlayerController? player, CommandInfo _)
     {
-        commands.ForEach(command => Server.ExecuteCommand(command));
-    }
-}
-
-public static class DictionaryExtensions
-{
-    public static TValue GetValueOrDefault<TKey, TValue>(
-        this Dictionary<TKey, TValue> dictionary,
-        TKey key,
-        TValue defaultValue)
-            where TKey : notnull
-    {
-        return dictionary.TryGetValue(key, out var value) ? value : defaultValue;
+        if (player != null)
+        {
+            PlayerReadyManager[player.SteamID] = true;
+        }
     }
 }
