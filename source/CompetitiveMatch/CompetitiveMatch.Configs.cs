@@ -37,6 +37,7 @@ public partial class CompetitiveMatch
             "mp_roundtime 120",
             "mp_startmoney 0",
             "mp_t_default_secondary \"\"",
+            "mp_team_intro_time 0",
             "mp_teamcashawards 0",
 
             // ...then run these
@@ -135,7 +136,7 @@ public partial class CompetitiveMatch
             "mp_t_default_melee weapon_knife",
             "mp_t_default_primary \"\"",
             "mp_t_default_secondary weapon_glock",
-            "mp_team_intro_time 0",
+            "mp_team_intro_time 6.5",
             "mp_team_timeout_max 4",
             "mp_team_timeout_time 30",
             "mp_teamcashawards 1",
