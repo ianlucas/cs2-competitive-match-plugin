@@ -19,10 +19,14 @@ public partial class CompetitiveMatch : BasePlugin
 
     public override void Load(bool hotReload)
     {
-        match_bot_fill.ValueChanged += HandleMatchBotFillChange;
+        match_bot_fill.ValueChanged += OnChangeMatchBotFill;
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnTick>(OnTick);
-        RegisterEventHandler<EventRoundEnd>(OnRoundEnd, HookMode.Pre);
+        RegisterEventHandler<EventRoundStart>(OnRoundStart);
+        RegisterEventHandler<EventItemPickup>(OnItemPickup);
+        RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
+        RegisterEventHandler<EventRoundEnd>(OnRoundEndPre, HookMode.Pre);
+        RegisterEventHandler<EventRoundMvp>(OnRoundMvpPre, HookMode.Pre);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
     }
 }

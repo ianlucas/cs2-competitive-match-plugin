@@ -5,7 +5,6 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
@@ -41,6 +40,7 @@ public partial class CompetitiveMatch
         }
     }
 
+    // @todo: minor issue, but player may be sent flying if they jump right before we freeze them...
     private void FreezePlayer(CCSPlayerController player) => SetPlayerMoveType(player, MoveType_t.MOVETYPE_NONE);
     // @todo: remove if not needed
     private void UnfreezePlayer(CCSPlayerController player) => SetPlayerMoveType(player, MoveType_t.MOVETYPE_WALK);
@@ -52,11 +52,23 @@ public partial class CompetitiveMatch
         int totalHealth = 0;
         Utilities.GetPlayers().ForEach(player =>
         {
-            var pawn = player.PlayerPawn.Value;
-            if (player.Team == team && pawn != null)
+            var playerPawn = player.PlayerPawn.Value;
+            var pawn = player.Pawn.Value;
+            if (player.Team == team)
             {
-                if (pawn.Health > 0) count++;
-                totalHealth += pawn.Health;
+                if (player.IsBot)
+                {
+                    if (pawn != null)
+                    {
+                        if (pawn.Health > 0) count++;
+                        totalHealth += pawn.Health;
+                    }
+                }
+                else if (playerPawn != null)
+                {
+                    if (playerPawn.Health > 0) count++;
+                    totalHealth += playerPawn.Health;
+                }
             }
         });
         return (count, totalHealth);
@@ -67,8 +79,6 @@ public partial class CompetitiveMatch
     {
         (int tAlive, int tHealth) = GetAlivePlayers(CsTeam.Terrorist);
         (int ctAlive, int ctHealth) = GetAlivePlayers(CsTeam.CounterTerrorist);
-        Server.PrintToChatAll($"{tAlive}:{tHealth}");
-        Server.PrintToChatAll($"{ctAlive}:{ctHealth}");
         if (ctAlive > tAlive)
         {
             return CsTeam.CounterTerrorist;
@@ -88,7 +98,7 @@ public partial class CompetitiveMatch
         return (CsTeam)(new Random()).Next(2, 4);
     }
 
-    public string GetStateString(string color, string state, string description)
+    public string GetCallForActionString(string color, string state, string description, string? timeLeft = null)
     {
         var builder = new StringBuilder();
         builder.Append("<b><font class='fontSize-s' color='silver'>");
@@ -99,18 +109,40 @@ public partial class CompetitiveMatch
         builder.Append(state);
         builder.Append("</font><br>");
         builder.Append(description);
+        if (timeLeft != null)
+        {
+            builder.Append("<br><br>");
+            builder.Append(timeLeft);
+        }
         return builder.ToString();
     }
-}
 
-public static class DictionaryExtensions
-{
-    public static TValue GetValueOrDefault<TKey, TValue>(
-        this Dictionary<TKey, TValue> dictionary,
-        TKey key,
-        TValue defaultValue)
-            where TKey : notnull
+    public CCSGameRules? GetGameRules()
     {
-        return dictionary.TryGetValue(key, out var value) ? value : defaultValue;
+        if (GameRulesProxy?.IsValid == true)
+        {
+            return GameRulesProxy.GameRules;
+        }
+        GameRulesProxy = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First();
+        return GameRulesProxy?.GameRules;
+    }
+
+    public long Now()
+    {
+        return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    }
+
+    public string FormatTimeLeft(long startedAt, long totalTime)
+    {
+        long currentTime = Now();
+        long elapsedTime = currentTime - startedAt;
+        if (elapsedTime >= totalTime)
+        {
+            return "0:00";
+        }
+        long timeLeft = totalTime - elapsedTime;
+        long minutesLeft = timeLeft / 60;
+        long secondsLeft = timeLeft % 60;
+        return $"{minutesLeft}:{secondsLeft:D2}";
     }
 }

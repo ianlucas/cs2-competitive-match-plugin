@@ -11,30 +11,35 @@ public partial class CompetitiveMatch
     {
         ExecuteCommands(new List<string>
         {
-            "sv_hibernate_when_empty 0",
-            "mp_weapons_allow_typecount -1",
-            "mp_ct_default_secondary weapon_hkp2000",
-            "mp_t_default_secondary weapon_glock",
-            "mp_warmup_start",
-            "mp_warmup_pausetimer 1",
             "mp_autoteambalance 0",
+            "mp_ct_default_secondary weapon_hkp2000",
+            "mp_death_drop_gun 0",
             "mp_limitteams 0",
-            "mp_death_drop_gun 0"
+            "mp_t_default_secondary weapon_glock",
+            "mp_warmup_pausetimer 1",
+            "mp_warmup_start",
+            "mp_weapons_allow_typecount -1",
+            "sv_hibernate_when_empty 0"
         });
     }
 
     public void ExecuteKnife()
     {
-        var knifeFreezeTime = 5; //30
         ExecuteCommands(new List<string>
         {
             "mp_ct_default_secondary \"\"",
-            "mp_t_default_secondary \"\"",
-            $"mp_freezetime {knifeFreezeTime}",
-            "mp_roundtime 120",
-            "mp_round_restart_delay 120",
+            "mp_free_armor 2",
+            "mp_freezetime 30",
+            "mp_friendlyfire 0",
             "mp_give_player_c4 0",
+            "mp_playercashawards 0",
+            "mp_round_restart_delay 120",
+            "mp_roundtime 120",
             "mp_startmoney 0",
+            "mp_t_default_secondary \"\"",
+            "mp_teamcashawards 0",
+
+            // ...then run these
             "mp_warmup_end",
             "mp_warmup_pausetimer 0"
         });
@@ -160,6 +165,5 @@ public partial class CompetitiveMatch
             "sv_vote_command_delay 0",
             "tv_relayvoice 1"
         });
-
     }
 }

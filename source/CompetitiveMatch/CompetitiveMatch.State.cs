@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 
@@ -31,6 +32,8 @@ public partial class CompetitiveMatch
 
     public MatchPhase Phase = MatchPhase.Warmup;
     public bool IsInitialized = false;
+    public long KnifeVoteStartedAt = 0;
     public Dictionary<ulong, PlayerState> PlayerStateManager = [];
     public CsTeam KnifeWinner = CsTeam.None; // @todo: need to be reseted
+    public CCSGameRulesProxy? GameRulesProxy;
 }

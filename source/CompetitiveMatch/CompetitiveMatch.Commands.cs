@@ -33,14 +33,4 @@ public partial class CompetitiveMatch
             StartMatch();
         }
     }
-
-    [ConsoleCommand("css_debug", "")]
-    public void OnDebugCommand(CCSPlayerController? player, CommandInfo _)
-    {
-        if (player != null)
-        {
-            player.GiveNamedItem(CsItem.Deagle);
-            player.GiveNamedItem(CsItem.AWP);
-        }
-    }
 }
