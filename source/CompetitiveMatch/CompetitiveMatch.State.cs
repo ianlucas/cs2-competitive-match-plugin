@@ -14,7 +14,7 @@ public enum MatchPhase_t
     Warmup,
     Knife,
     KnifeVote,
-    PreLive,
+    LiveFirstRound,
     Live
 }
 
@@ -42,6 +42,8 @@ public partial class CompetitiveMatch
     public MatchPhase_t Phase = MatchPhase_t.Warmup;
     public bool IsInitialized = false;
     public long KnifeVoteStartedAt = 0;
+    public long KnifeStartedAt = 0;
+    public long LiveStartedAt = 0;
     public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
     public Dictionary<ulong, PlayerState> PlayerStateManager = [];
     public CsTeam KnifeWinner = CsTeam.None; // @todo: need to be reseted

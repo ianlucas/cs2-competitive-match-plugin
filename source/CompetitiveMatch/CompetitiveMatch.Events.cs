@@ -38,7 +38,20 @@ public partial class CompetitiveMatch
             IsInitialized = true;
         }
 
-        if (Phase == MatchPhase_t.Warmup || Phase == MatchPhase_t.KnifeVote)
+
+        if (Phase == MatchPhase_t.LiveFirstRound && (DiffNow(LiveStartedAt + 1) < 7))
+        {
+            var gameRules = GetGameRules();
+            if (gameRules != null)
+            {
+                gameRules.TeamIntroPeriod = true;
+            }
+        }
+
+        if (Phase == MatchPhase_t.Warmup ||
+            (Phase == MatchPhase_t.Knife && DiffNow(KnifeStartedAt) < 10) ||
+            Phase == MatchPhase_t.KnifeVote ||
+            (Phase == MatchPhase_t.LiveFirstRound && DiffNow(LiveStartedAt) < 10))
         {
             Utilities.GetPlayers().ForEach(player =>
             {
@@ -55,8 +68,11 @@ public partial class CompetitiveMatch
                                 description: isReady ? "Waiting other players..." : "Type !ready (to be ready)."));
                         break;
 
+                    case MatchPhase_t.Knife:
+                        player.PrintToCenterHtml("KNIFE ROUND COMMENCING");
+                        break;
+
                     case MatchPhase_t.KnifeVote:
-                        // when round starts must restart the game and keep the players in their current team.
                         var inWinnerTeam = player.Team == KnifeWinner;
                         var timeLeft = FormatTimeLeft(KnifeVoteStartedAt, 120);
                         var didVote = playerState.KnifeVote != KnifeVote_t.None;
@@ -72,34 +88,34 @@ public partial class CompetitiveMatch
                                     : "Waiting opponent team...",
                                 timeLeft));
                         break;
-                }
 
+                    case MatchPhase_t.LiveFirstRound:
+                        if (GetGameRules()?.TeamIntroPeriod != true)
+                        {
+                            player.PrintToCenterHtml("MATCH COMMENCING");
+                        }
+                        break;
+                }
             });
         }
     }
 
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo _)
     {
-        if (Phase == MatchPhase_t.Knife)
+        switch (Phase)
         {
-            Utilities.GetPlayers().ForEach(player =>
-            {
-                player.PrintToCenterHtml("KNIFE ROUND COMMENCING", 10);
-            });
-        }
-        if (Phase == MatchPhase_t.KnifeVote)
-        {
-            // @todo: test this scenario
-            StartLive();
-        }
-        if (Phase == MatchPhase_t.PreLive)
-        {
-            // @todo: review print to center
-            Phase = MatchPhase_t.Live;
-            Utilities.GetPlayers().ForEach(player =>
-            {
-                player.PrintToCenterHtml("MATCH COMMENCING", 10);
-            });
+            case MatchPhase_t.Knife:
+                KnifeStartedAt = Now();
+                break;
+
+            case MatchPhase_t.KnifeVote:
+                //@todo: test this scenario
+                StartLive();
+                break;
+
+            case MatchPhase_t.LiveFirstRound:
+                LiveStartedAt = Now();
+                break;
         }
         return HookResult.Continue;
     }
@@ -178,25 +194,20 @@ public partial class CompetitiveMatch
                 KnifeWinner = knifeWinner;
                 KnifeVoteStartedAt = Now();
                 Phase = MatchPhase_t.KnifeVote;
-                Utilities.GetPlayers().ForEach(player => FreezePlayer(player));
+                Utilities.GetPlayers().ForEach(player =>
+                {
+                    player.MVPs = 0;
+                    FreezePlayer(player);
+                });
             }
             else
             {
                 Logger.LogCritical($"[CompetitiveMatch] Unable to get CCSGameRules.");
             }
         }
-        return HookResult.Continue;
-    }
-
-    public HookResult OnRoundMvpPre(EventRoundMvp @event, GameEventInfo _)
-    {
-        var player = @event.Userid;
-        if (player != null)
+        if (Phase == MatchPhase_t.LiveFirstRound)
         {
-            if (Phase == MatchPhase_t.Knife || Phase == MatchPhase_t.KnifeVote)
-            {
-                player.MVPs = 0;
-            }
+            Phase = MatchPhase_t.Live;
         }
         return HookResult.Continue;
     }

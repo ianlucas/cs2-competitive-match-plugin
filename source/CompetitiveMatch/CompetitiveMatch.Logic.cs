@@ -58,7 +58,7 @@ public partial class CompetitiveMatch
 
     public void StartLive()
     {
-        Phase = MatchPhase_t.PreLive;
+        Phase = MatchPhase_t.LiveFirstRound;
         ExecuteLive();
         switch (KnifeVoteDecision)
         {

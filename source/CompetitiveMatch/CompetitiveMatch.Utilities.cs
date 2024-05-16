@@ -136,10 +136,14 @@ public partial class CompetitiveMatch
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
     }
 
+    public long DiffNow(long value)
+    {
+        return Now() - value;
+    }
+
     public string FormatTimeLeft(long startedAt, long totalTime)
     {
-        long currentTime = Now();
-        long elapsedTime = currentTime - startedAt;
+        long elapsedTime = DiffNow(startedAt);
         if (elapsedTime >= totalTime)
         {
             return "0:00";

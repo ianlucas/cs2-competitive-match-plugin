@@ -29,7 +29,7 @@ public partial class CompetitiveMatch
         {
             "mp_ct_default_secondary \"\"",
             "mp_free_armor 2",
-            "mp_freezetime 30",
+            "mp_freezetime 15",
             "mp_friendlyfire 0",
             "mp_give_player_c4 0",
             "mp_playercashawards 0",
