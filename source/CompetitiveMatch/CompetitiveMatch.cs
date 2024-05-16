@@ -22,6 +22,8 @@ public partial class CompetitiveMatch : BasePlugin
         match_bot_fill.ValueChanged += OnChangeMatchBotFill;
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnTick>(OnTick);
+        RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
+        AddCommandListener("jointeam", OnPlayerJoinTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
         RegisterEventHandler<EventItemPickup>(OnItemPickup);
         RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);

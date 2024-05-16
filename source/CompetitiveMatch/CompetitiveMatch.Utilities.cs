@@ -131,6 +131,11 @@ public partial class CompetitiveMatch
         return GameRulesProxy?.GameRules;
     }
 
+    public CsTeam ToggleTeam(CsTeam team)
+    {
+        return team == CsTeam.CounterTerrorist ? CsTeam.Terrorist : CsTeam.CounterTerrorist;
+    }
+
     public long Now()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();

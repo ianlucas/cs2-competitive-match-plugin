@@ -42,14 +42,26 @@ public partial class CompetitiveMatch
 
     public void TryStartLive()
     {
-        var playersInTeam = PlayerStateManager.Values.Where(state => state.StartingTeam == KnifeWinner).Count();
-        var votesNeeded = (int)Math.Ceiling(playersInTeam / 2.0);
+        var winnerPlayers = PlayerStateManager.Values.Where(state => state.StartingTeam == KnifeWinner);
+        var votesNeeded = (int)Math.Ceiling(winnerPlayers.Count() / 2.0);
         foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
         {
             var count = PlayerStateManager.Values.Where(state => state.KnifeVote == knifeVote).Count();
             if (count == votesNeeded)
             {
                 KnifeVoteDecision = knifeVote;
+                if (knifeVote == KnifeVote_t.Switch)
+                {
+                    var otherPlayers = PlayerStateManager.Values.Where(state => state.StartingTeam != KnifeWinner);
+                    foreach (var player in otherPlayers)
+                    {
+                        player.StartingTeam = ToggleTeam(player.StartingTeam);
+                    }
+                    foreach (var player in winnerPlayers)
+                    {
+                        player.StartingTeam = ToggleTeam(player.StartingTeam);
+                    }
+                }
                 StartLive();
                 return;
             }
