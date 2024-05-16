@@ -38,15 +38,16 @@ public partial class CompetitiveMatch
             IsInitialized = true;
         }
 
-        if (Phase == MatchPhase.Warmup || Phase == MatchPhase.KnifeVote)
+        if (Phase == MatchPhase_t.Warmup || Phase == MatchPhase_t.KnifeVote)
         {
             Utilities.GetPlayers().ForEach(player =>
             {
                 var builder = new StringBuilder();
+                var playerState = GetPlayerState(player);
                 switch (Phase)
                 {
-                    case MatchPhase.Warmup:
-                        var isReady = GetPlayerState(player).IsReady;
+                    case MatchPhase_t.Warmup:
+                        var isReady = playerState.IsReady;
                         player.PrintToCenterHtml(
                             GetCallForActionString(
                                 color: isReady ? "lime" : "red",
@@ -54,15 +55,21 @@ public partial class CompetitiveMatch
                                 description: isReady ? "Waiting other players..." : "Type !ready (to be ready)."));
                         break;
 
-                    case MatchPhase.KnifeVote:
+                    case MatchPhase_t.KnifeVote:
                         // when round starts must restart the game and keep the players in their current team.
                         var inWinnerTeam = player.Team == KnifeWinner;
                         var timeLeft = FormatTimeLeft(KnifeVoteStartedAt, 120);
+                        var didVote = playerState.KnifeVote != KnifeVote_t.None;
+                        var didVoteToStay = playerState.KnifeVote == KnifeVote_t.Stay;
                         player.PrintToCenterHtml(
                             GetCallForActionString(
                                 color: inWinnerTeam ? "lime" : "red",
                                 state: inWinnerTeam ? "WON KNIFE ROUND" : "LOST KNIFE ROUND",
-                                description: inWinnerTeam ? "Type !stay (to stay) or !switch (to switch) team sides." : "Waiting opponent team...",
+                                description: inWinnerTeam
+                                    ? didVote
+                                        ? didVoteToStay ? "You voted to stay." : "You voted to switch."
+                                        : "Type !stay (to stay) or !switch (to switch) team sides."
+                                    : "Waiting opponent team...",
                                 timeLeft));
                         break;
                 }
@@ -73,11 +80,25 @@ public partial class CompetitiveMatch
 
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo _)
     {
-        if (Phase == MatchPhase.Knife)
+        if (Phase == MatchPhase_t.Knife)
         {
             Utilities.GetPlayers().ForEach(player =>
             {
-                player.PrintToCenter("Knife Round Commencing");
+                player.PrintToCenterHtml("KNIFE ROUND COMMENCING", 10);
+            });
+        }
+        if (Phase == MatchPhase_t.KnifeVote)
+        {
+            // @todo: test this scenario
+            StartLive();
+        }
+        if (Phase == MatchPhase_t.PreLive)
+        {
+            // @todo: review print to center
+            Phase = MatchPhase_t.Live;
+            Utilities.GetPlayers().ForEach(player =>
+            {
+                player.PrintToCenterHtml("MATCH COMMENCING", 10);
             });
         }
         return HookResult.Continue;
@@ -88,7 +109,7 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
-            if (Phase == MatchPhase.Warmup)
+            if (Phase == MatchPhase_t.Warmup)
             {
                 var inGameMoneyServices = player.InGameMoneyServices;
                 if (inGameMoneyServices != null)
@@ -108,7 +129,7 @@ public partial class CompetitiveMatch
         {
             var playerPawn = player.PlayerPawn.Value;
             var pawn = player.Pawn.Value;
-            if (Phase == MatchPhase.KnifeVote)
+            if (Phase == MatchPhase_t.KnifeVote)
             {
 
                 if (player.IsBot)
@@ -129,7 +150,7 @@ public partial class CompetitiveMatch
 
     public HookResult OnRoundEndPre(EventRoundEnd @event, GameEventInfo _)
     {
-        if (Phase == MatchPhase.Knife)
+        if (Phase == MatchPhase_t.Knife)
         {
             var gameRules = GetGameRules();
             var knifeWinner = GetKnifeWinner();
@@ -156,7 +177,7 @@ public partial class CompetitiveMatch
                 gameRules.RoundEndFunFactPlayerSlot = 0;
                 KnifeWinner = knifeWinner;
                 KnifeVoteStartedAt = Now();
-                Phase = MatchPhase.KnifeVote;
+                Phase = MatchPhase_t.KnifeVote;
                 Utilities.GetPlayers().ForEach(player => FreezePlayer(player));
             }
             else
@@ -172,7 +193,7 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
-            if (Phase == MatchPhase.Knife || Phase == MatchPhase.KnifeVote)
+            if (Phase == MatchPhase_t.Knife || Phase == MatchPhase_t.KnifeVote)
             {
                 player.MVPs = 0;
             }
@@ -185,7 +206,7 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
-            if (Phase == MatchPhase.Warmup)
+            if (Phase == MatchPhase_t.Warmup)
             {
                 PlayerStateManager.Remove(player.SteamID);
             }

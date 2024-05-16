@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Modules.Utils;
+using CounterStrikeSharp.API.Core;
 
 namespace CompetitiveMatch;
 
@@ -28,6 +28,46 @@ public partial class CompetitiveMatch
     public void StartMatch()
     {
         ExecuteKnife();
-        Phase = MatchPhase.Knife;
+        Phase = MatchPhase_t.Knife;
+    }
+
+    public void AssignPlayerKnifeVote(CCSPlayerController player, KnifeVote_t vote)
+    {
+        var playerState = GetPlayerState(player);
+        if (playerState.StartingTeam == KnifeWinner && playerState.KnifeVote == KnifeVote_t.None)
+        {
+            playerState.KnifeVote = vote;
+        }
+    }
+
+    public void TryStartLive()
+    {
+        var playersInTeam = PlayerStateManager.Values.Where(state => state.StartingTeam == KnifeWinner).Count();
+        var votesNeeded = (int)Math.Ceiling(playersInTeam / 2.0);
+        foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
+        {
+            var count = PlayerStateManager.Values.Where(state => state.KnifeVote == knifeVote).Count();
+            if (count == votesNeeded)
+            {
+                KnifeVoteDecision = knifeVote;
+                StartLive();
+                return;
+            }
+        }
+    }
+
+    public void StartLive()
+    {
+        Phase = MatchPhase_t.PreLive;
+        ExecuteLive();
+        switch (KnifeVoteDecision)
+        {
+            case KnifeVote_t.Switch:
+                Server.ExecuteCommand("mp_swapteams");
+                break;
+            default:
+                Server.ExecuteCommand("mp_restartgame 1");
+                break;
+        }
     }
 }

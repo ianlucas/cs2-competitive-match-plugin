@@ -19,6 +19,10 @@ public partial class CompetitiveMatch
 
     public PlayerState GetPlayerState(CCSPlayerController player)
     {
+        if (player.IsBot)
+        {
+            return BotState;
+        }
         if (PlayerStateManager.TryGetValue(player.SteamID, out var state))
         {
             return state;
