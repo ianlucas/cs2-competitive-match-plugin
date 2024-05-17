@@ -12,7 +12,7 @@ public partial class CompetitiveMatch
 {
     public void TryStartMatch()
     {
-        var players = PlayerStateManager.Values.Where(state => state.IsReady);
+        var players = MatchMap.Players.Values.Where(state => state.IsReady);
         if (players.Count() == match_max_players.Value)
         {
             StartMatch();
@@ -21,7 +21,7 @@ public partial class CompetitiveMatch
 
     public void StartMatch()
     {
-        foreach (var playerState in PlayerStateManager.Values)
+        foreach (var playerState in MatchMap.Players.Values)
         {
             var player = playerState.Controller;
             if (player != null)
@@ -31,13 +31,13 @@ public partial class CompetitiveMatch
             }
         }
         ExecuteKnife();
-        Phase = MatchPhase_t.Knife;
+        MatchMap.Phase = MatchPhase_t.Knife;
     }
 
     public void AssignPlayerKnifeVote(CCSPlayerController player, KnifeVote_t vote)
     {
         var playerState = GetPlayerState(player);
-        if (playerState.StartingTeam == KnifeWinner && playerState.KnifeVote == KnifeVote_t.None)
+        if (playerState.StartingTeam == MatchMap.KnifeWinner && playerState.KnifeVote == KnifeVote_t.None)
         {
             playerState.KnifeVote = vote;
         }
@@ -45,17 +45,17 @@ public partial class CompetitiveMatch
 
     public void TryStartLive()
     {
-        var winnerPlayers = PlayerStateManager.Values.Where(state => state.StartingTeam == KnifeWinner);
+        var winnerPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam == MatchMap.KnifeWinner);
         var votesNeeded = (int)Math.Ceiling(winnerPlayers.Count() / 2.0);
         foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
         {
-            var count = PlayerStateManager.Values.Where(state => state.KnifeVote == knifeVote).Count();
+            var count = MatchMap.Players.Values.Where(state => state.KnifeVote == knifeVote).Count();
             if (count == votesNeeded)
             {
-                KnifeVoteDecision = knifeVote;
+                MatchMap.KnifeVoteDecision = knifeVote;
                 if (knifeVote == KnifeVote_t.Switch)
                 {
-                    var otherPlayers = PlayerStateManager.Values.Where(state => state.StartingTeam != KnifeWinner);
+                    var otherPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam != MatchMap.KnifeWinner);
                     foreach (var player in otherPlayers)
                     {
                         player.StartingTeam = ToggleTeam(player.StartingTeam);
@@ -73,9 +73,9 @@ public partial class CompetitiveMatch
 
     public void StartLive()
     {
-        Phase = MatchPhase_t.LiveFirstRound;
+        MatchMap.Phase = MatchPhase_t.LiveFirstRound;
         ExecuteLive();
-        switch (KnifeVoteDecision)
+        switch (MatchMap.KnifeVoteDecision)
         {
             case KnifeVote_t.Switch:
                 Server.ExecuteCommand("mp_swapteams");

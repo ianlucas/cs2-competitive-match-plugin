@@ -16,7 +16,7 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_ready", "Mark yourself as ready.")]
     public void OnReadyCommand(CCSPlayerController? player, CommandInfo _)
     {
-        if (player != null && Phase == MatchPhase_t.Warmup)
+        if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
         {
             GetPlayerState(player).IsReady = true;
             TryStartMatch();
@@ -26,7 +26,7 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_stay", "Vote to stay in the current team.")]
     public void OnStayCommand(CCSPlayerController? player, CommandInfo _)
     {
-        if (player != null && Phase == MatchPhase_t.KnifeVote)
+        if (player != null && MatchMap.Phase == MatchPhase_t.KnifeVote)
         {
             AssignPlayerKnifeVote(player, KnifeVote_t.Stay);
             TryStartLive();
@@ -36,7 +36,7 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_switch", "Vote to switch team side.")]
     public void OnSwitchCommand(CCSPlayerController? player, CommandInfo _)
     {
-        if (player != null && Phase == MatchPhase_t.KnifeVote)
+        if (player != null && MatchMap.Phase == MatchPhase_t.KnifeVote)
         {
             AssignPlayerKnifeVote(player, KnifeVote_t.Switch);
             TryStartLive();
@@ -47,9 +47,8 @@ public partial class CompetitiveMatch
     public void OnStartCommand(CCSPlayerController? player, CommandInfo _)
     {
         // @TODO: Check if player is @css/admin.
-        if (player != null && Phase == MatchPhase_t.Warmup)
+        if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
         {
-            // Todo populate player teams
             StartMatch();
         }
     }

@@ -23,12 +23,12 @@ public partial class CompetitiveMatch
         {
             return BotState;
         }
-        if (PlayerStateManager.TryGetValue(player.SteamID, out var state))
+        if (MatchMap.Players.TryGetValue(player.SteamID, out var state))
         {
             return state;
         }
         var newState = new PlayerState(player);
-        PlayerStateManager[player.SteamID] = newState;
+        MatchMap.Players[player.SteamID] = newState;
         return newState;
     }
 

@@ -35,14 +35,13 @@ public partial class CompetitiveMatch
     {
         if (!IsInitialized)
         {
-            PlayerStateManager.Clear();
+            MatchMap = new(/* @todo: for premade matches, pass here default stuff */);
             OnChangeMatchBotFill(null, match_bot_fill.Value);
             ExecuteWarmup();
             IsInitialized = true;
         }
 
-
-        if (Phase == MatchPhase_t.LiveFirstRound && (DiffNow(LiveStartedAt + 1) < 7))
+        if (MatchMap.Phase == MatchPhase_t.LiveFirstRound && (DiffNow(MatchMap.LiveStartedAt + 1) < 7))
         {
             var gameRules = GetGameRules();
             if (gameRules != null)
@@ -51,16 +50,16 @@ public partial class CompetitiveMatch
             }
         }
 
-        if (Phase == MatchPhase_t.Warmup ||
-            (Phase == MatchPhase_t.Knife && DiffNow(KnifeStartedAt) < 10) ||
-            Phase == MatchPhase_t.KnifeVote ||
-            (Phase == MatchPhase_t.LiveFirstRound && DiffNow(LiveStartedAt) < 10))
+        if (MatchMap.Phase == MatchPhase_t.Warmup ||
+            (MatchMap.Phase == MatchPhase_t.Knife && DiffNow(MatchMap.KnifeStartedAt) < 10) ||
+            MatchMap.Phase == MatchPhase_t.KnifeVote ||
+            (MatchMap.Phase == MatchPhase_t.LiveFirstRound && DiffNow(MatchMap.LiveStartedAt) < 10))
         {
             Utilities.GetPlayers().ForEach(player =>
             {
                 var builder = new StringBuilder();
                 var playerState = GetPlayerState(player);
-                switch (Phase)
+                switch (MatchMap.Phase)
                 {
                     case MatchPhase_t.Warmup:
                         var isReady = playerState.IsReady;
@@ -76,8 +75,8 @@ public partial class CompetitiveMatch
                         break;
 
                     case MatchPhase_t.KnifeVote:
-                        var inWinnerTeam = player.Team == KnifeWinner;
-                        var timeLeft = FormatTimeLeft(KnifeVoteStartedAt, 120);
+                        var inWinnerTeam = player.Team == MatchMap.KnifeWinner;
+                        var timeLeft = FormatTimeLeft(MatchMap.KnifeVoteStartedAt, 120);
                         var didVote = playerState.KnifeVote != KnifeVote_t.None;
                         var didVoteToStay = playerState.KnifeVote == KnifeVote_t.Stay;
                         player.PrintToCenterHtml(
@@ -107,7 +106,7 @@ public partial class CompetitiveMatch
     {
         var player = @event.Userid;
         // @todo: loaded matches must prevent player joining teams.
-        if (player?.IsBot == false && Phase != MatchPhase_t.Warmup)
+        if (player?.IsBot == false && MatchMap.Phase != MatchPhase_t.Warmup)
         {
             var gameRules = GetGameRules();
             var mp_maxrounds = ConVar.Find("mp_maxrounds")?.GetPrimitiveValue<int>();
@@ -140,7 +139,7 @@ public partial class CompetitiveMatch
     public HookResult OnPlayerJoinTeam(CCSPlayerController? player, CommandInfo _)
     {
         // @todo: loaded matches must prevent player joining teams.
-        if (player?.IsBot == false && Phase != MatchPhase_t.Warmup)
+        if (player?.IsBot == false && MatchMap.Phase != MatchPhase_t.Warmup)
         {
             return HookResult.Stop;
         }
@@ -149,10 +148,10 @@ public partial class CompetitiveMatch
 
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo _)
     {
-        switch (Phase)
+        switch (MatchMap.Phase)
         {
             case MatchPhase_t.Knife:
-                KnifeStartedAt = Now();
+                MatchMap.KnifeStartedAt = Now();
                 break;
 
             case MatchPhase_t.KnifeVote:
@@ -161,7 +160,7 @@ public partial class CompetitiveMatch
                 break;
 
             case MatchPhase_t.LiveFirstRound:
-                LiveStartedAt = Now();
+                MatchMap.LiveStartedAt = Now();
                 break;
         }
         return HookResult.Continue;
@@ -172,7 +171,7 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
-            if (Phase == MatchPhase_t.Warmup)
+            if (MatchMap.Phase == MatchPhase_t.Warmup)
             {
                 var inGameMoneyServices = player.InGameMoneyServices;
                 if (inGameMoneyServices != null)
@@ -192,7 +191,7 @@ public partial class CompetitiveMatch
         {
             var playerPawn = player.PlayerPawn.Value;
             var pawn = player.Pawn.Value;
-            if (Phase == MatchPhase_t.KnifeVote)
+            if (MatchMap.Phase == MatchPhase_t.KnifeVote)
             {
                 if (player.IsBot)
                 {
@@ -212,7 +211,7 @@ public partial class CompetitiveMatch
 
     public HookResult OnRoundEndPre(EventRoundEnd @event, GameEventInfo _)
     {
-        if (Phase == MatchPhase_t.Knife)
+        if (MatchMap.Phase == MatchPhase_t.Knife)
         {
             var gameRules = GetGameRules();
             var knifeWinner = GetKnifeWinner();
@@ -237,9 +236,9 @@ public partial class CompetitiveMatch
                 gameRules.RoundEndWinnerTeam = (int)knifeWinner;
                 gameRules.RoundEndFunFactData1 = 0;
                 gameRules.RoundEndFunFactPlayerSlot = 0;
-                KnifeWinner = knifeWinner;
-                KnifeVoteStartedAt = Now();
-                Phase = MatchPhase_t.KnifeVote;
+                MatchMap.KnifeWinner = knifeWinner;
+                MatchMap.KnifeVoteStartedAt = Now();
+                MatchMap.Phase = MatchPhase_t.KnifeVote;
                 Utilities.GetPlayers().ForEach(player =>
                 {
                     player.MVPs = 0;
@@ -251,9 +250,9 @@ public partial class CompetitiveMatch
                 Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
             }
         }
-        if (Phase == MatchPhase_t.LiveFirstRound)
+        if (MatchMap.Phase == MatchPhase_t.LiveFirstRound)
         {
-            Phase = MatchPhase_t.Live;
+            MatchMap.Phase = MatchPhase_t.Live;
         }
         return HookResult.Continue;
     }
@@ -263,9 +262,9 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
-            if (Phase == MatchPhase_t.Warmup)
+            if (MatchMap.Phase == MatchPhase_t.Warmup)
             {
-                PlayerStateManager.Remove(player.SteamID);
+                MatchMap.Players.Remove(player.SteamID);
             }
         }
         return HookResult.Continue;

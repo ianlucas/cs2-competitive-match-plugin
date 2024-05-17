@@ -33,6 +33,18 @@ public class PlayerState(CCSPlayerController? player)
     public CCSPlayerController? Controller = player;
 }
 
+public class MatchMapState
+{
+    public CsTeam KnifeWinner = CsTeam.None;
+    public Dictionary<ulong, PlayerState> Players = [];
+    public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
+    public long KnifeStartedAt = 0;
+    public long KnifeVoteStartedAt = 0;
+    public long LiveStartedAt = 0;
+    public MatchPhase_t Phase = MatchPhase_t.Warmup;
+}
+
+
 public partial class CompetitiveMatch
 {
     public readonly FakeConVar<bool> match_bot_fill = new("match_bot_fill", "Whether to fill vacant slots with bots.", true);
@@ -40,14 +52,8 @@ public partial class CompetitiveMatch
     public readonly FakeConVar<bool> match_whitelist = new("match_whitelist", "Whether use whitelist.", false);
     public readonly FakeConVar<string> match_hostname = new("match_hostname", "Hostname of the match.", "Competitive Match");
 
-    public MatchPhase_t Phase = MatchPhase_t.Warmup;
     public bool IsInitialized = false;
-    public long KnifeVoteStartedAt = 0;
-    public long KnifeStartedAt = 0;
-    public long LiveStartedAt = 0;
-    public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
-    public Dictionary<ulong, PlayerState> PlayerStateManager = [];
-    public CsTeam KnifeWinner = CsTeam.None; // @todo: need to be reseted
     public CCSGameRulesProxy? GameRulesProxy;
     public readonly PlayerState BotState = new(null);
+    public MatchMapState MatchMap = new();
 }
