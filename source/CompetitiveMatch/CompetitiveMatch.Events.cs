@@ -45,6 +45,11 @@ public partial class CompetitiveMatch
         {
             Utilities.GetPlayers().ForEach(player =>
             {
+                if (player.Team != CsTeam.Terrorist &&
+                    player.Team != CsTeam.CounterTerrorist)
+                {
+                    return;
+                }
                 var builder = new StringBuilder();
                 switch (MatchMap.Phase)
                 {
@@ -98,10 +103,16 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player?.IsBot == false)
         {
+            if (MatchMap.Phase == MatchPhase_t.Warmup)
+            {
+                player.ChangeTeam(CsTeam.Spectator);
+            }
+
             if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
                 MatchForfeitTimer?.Kill();
             }
+
             // @todo: loaded matches must prevent player joining teams.
             if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
@@ -115,14 +126,14 @@ public partial class CompetitiveMatch
                     var isHalfTime = currentRound <= mp_maxrounds
                         ? currentRound > mp_maxrounds / 2
                         : ((currentRound - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
-                    var assignedTeam = isHalfTime
+                    var expectedTeam = isHalfTime
                         ? startingTeam == CsTeam.Terrorist
                             ? CsTeam.CounterTerrorist
                             : CsTeam.Terrorist
                         : startingTeam;
-                    if (player.Team != assignedTeam)
+                    if (player.Team != expectedTeam)
                     {
-                        player.ChangeTeam(assignedTeam);
+                        player.ChangeTeam(expectedTeam);
                     }
                 }
                 else
@@ -276,6 +287,15 @@ public partial class CompetitiveMatch
                 }
             }
         }
+        return HookResult.Continue;
+    }
+
+    public HookResult OnCsWinPanelMatch(EventCsWinPanelMatch _, GameEventInfo __)
+    {
+        var mp_match_restart_delay = ConVar.Find("mp_match_restart_delay")?.GetPrimitiveValue<int>();
+        var restartDelay = mp_match_restart_delay != null ? mp_match_restart_delay - 1 : 1;
+        // @todo: handle next map here.
+        AddTimer((float)restartDelay, () => StartWarmup());
         return HookResult.Continue;
     }
 }

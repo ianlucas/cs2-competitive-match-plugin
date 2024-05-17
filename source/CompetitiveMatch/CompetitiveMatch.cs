@@ -27,6 +27,7 @@ public partial class CompetitiveMatch : BasePlugin
         RegisterEventHandler<EventItemPickup>(OnItemPickup);
         RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
         RegisterEventHandler<EventRoundEnd>(OnRoundEndPre, HookMode.Pre);
+        RegisterEventHandler<EventCsWinPanelMatch>(OnCsWinPanelMatch);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
     }
 }
