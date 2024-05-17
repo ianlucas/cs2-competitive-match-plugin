@@ -39,18 +39,17 @@ public partial class CompetitiveMatch
         }
 
         if (MatchMap.Phase == MatchPhase_t.Warmup ||
-            (MatchMap.Phase == MatchPhase_t.Knife && DiffNow(MatchMap.KnifeStartedAt) < 10) ||
+            MatchMap.Phase == MatchPhase_t.Knife ||
             MatchMap.Phase == MatchPhase_t.KnifeVote ||
-            (MatchMap.Phase == MatchPhase_t.LiveFirstRound && DiffNow(MatchMap.LiveStartedAt) < 10))
+            MatchMap.Phase == MatchPhase_t.LiveFirstRound)
         {
             Utilities.GetPlayers().ForEach(player =>
             {
                 var builder = new StringBuilder();
-                var playerState = GetPlayerState(player);
                 switch (MatchMap.Phase)
                 {
                     case MatchPhase_t.Warmup:
-                        var isReady = playerState.IsReady;
+                        var isReady = GetPlayerState(player).IsReady;
                         player.PrintToCenterHtml(
                             GetCallForActionString(
                                 color: isReady ? "lime" : "red",
@@ -59,14 +58,18 @@ public partial class CompetitiveMatch
                         break;
 
                     case MatchPhase_t.Knife:
-                        player.PrintToCenterHtml("KNIFE ROUND COMMENCING");
+                        if (DiffNow(MatchMap.KnifeStartedAt) < 10)
+                        {
+                            player.PrintToCenterHtml("KNIFE ROUND COMMENCING");
+                        }
                         break;
 
                     case MatchPhase_t.KnifeVote:
+                        var knifeVote = GetPlayerState(player).KnifeVote;
                         var inWinnerTeam = player.Team == MatchMap.KnifeWinner;
                         var timeLeft = FormatTimeLeft(MatchMap.KnifeVoteStartedAt, 120);
-                        var didVote = playerState.KnifeVote != KnifeVote_t.None;
-                        var didVoteToStay = playerState.KnifeVote == KnifeVote_t.Stay;
+                        var didVote = knifeVote != KnifeVote_t.None;
+                        var didVoteToStay = knifeVote == KnifeVote_t.Stay;
                         player.PrintToCenterHtml(
                             GetCallForActionString(
                                 color: inWinnerTeam ? "lime" : "red",
@@ -80,7 +83,10 @@ public partial class CompetitiveMatch
                         break;
 
                     case MatchPhase_t.LiveFirstRound:
-                        player.PrintToCenterHtml("MATCH COMMENCING");
+                        if (DiffNow(MatchMap.LiveStartedAt) < 10)
+                        {
+                            player.PrintToCenterHtml("MATCH COMMENCING");
+                        }
                         break;
                 }
             });
