@@ -135,7 +135,8 @@ public partial class CompetitiveMatch
             "mp_t_default_melee weapon_knife",
             "mp_t_default_primary \"\"",
             "mp_t_default_secondary weapon_glock",
-            "mp_team_intro_time 6.5",
+            // @todo: update this if Valve ever fixes the team intro issue.
+            "mp_team_intro_time 0",
             "mp_team_timeout_max 4",
             "mp_team_timeout_time 30",
             "mp_teamcashawards 1",

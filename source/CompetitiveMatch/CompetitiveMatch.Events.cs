@@ -38,15 +38,6 @@ public partial class CompetitiveMatch
             IsInitialized = true;
         }
 
-        if (MatchMap.Phase == MatchPhase_t.LiveFirstRound && (DiffNow(MatchMap.LiveStartedAt + 1) < 7))
-        {
-            var gameRules = GetGameRules();
-            if (gameRules != null)
-            {
-                gameRules.TeamIntroPeriod = true;
-            }
-        }
-
         if (MatchMap.Phase == MatchPhase_t.Warmup ||
             (MatchMap.Phase == MatchPhase_t.Knife && DiffNow(MatchMap.KnifeStartedAt) < 10) ||
             MatchMap.Phase == MatchPhase_t.KnifeVote ||
@@ -89,10 +80,7 @@ public partial class CompetitiveMatch
                         break;
 
                     case MatchPhase_t.LiveFirstRound:
-                        if (GetGameRules()?.TeamIntroPeriod != true)
-                        {
-                            player.PrintToCenterHtml("MATCH COMMENCING");
-                        }
+                        player.PrintToCenterHtml("MATCH COMMENCING");
                         break;
                 }
             });
