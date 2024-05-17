@@ -5,7 +5,6 @@
 
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Events;
 
 namespace CompetitiveMatch;
 

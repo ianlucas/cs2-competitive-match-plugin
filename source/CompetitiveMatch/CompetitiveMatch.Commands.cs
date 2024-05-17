@@ -3,11 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace CompetitiveMatch;
 
@@ -50,6 +48,16 @@ public partial class CompetitiveMatch
         if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
         {
             StartMatch();
+        }
+    }
+
+    [ConsoleCommand("css_restart", "Force match restart.")]
+    public void OnRestartCommand(CCSPlayerController? player, CommandInfo _)
+    {
+        // @TODO: Check if player is @css/admin.
+        if (player != null && MatchMap.Phase != MatchPhase_t.Warmup)
+        {
+            StartWarmup();
         }
     }
 }

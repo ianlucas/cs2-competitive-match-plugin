@@ -9,8 +9,7 @@ public partial class CompetitiveMatch
 {
     public void ExecuteWarmup()
     {
-        ExecuteCommands(new List<string>
-        {
+        ExecuteCommands([
             "bot_join_after_player 0",
             "bot_chatter off",
             "mp_autoteambalance 0",
@@ -22,13 +21,12 @@ public partial class CompetitiveMatch
             "mp_warmup_start",
             "mp_weapons_allow_typecount -1",
             "sv_hibernate_when_empty 0"
-        });
+        ]);
     }
 
     public void ExecuteKnife()
     {
-        ExecuteCommands(new List<string>
-        {
+        ExecuteCommands([
             "mp_ct_default_secondary \"\"",
             "mp_free_armor 2",
             "mp_freezetime 15",
@@ -45,13 +43,12 @@ public partial class CompetitiveMatch
             // ...then run these
             "mp_warmup_end",
             "mp_warmup_pausetimer 0"
-        });
+        ]);
     }
 
     public void ExecuteLive()
     {
-        ExecuteCommands(new List<string>
-        {
+        ExecuteCommands([
             "ammo_grenade_limit_default 1",
             "ammo_grenade_limit_flashbang 2",
             "ammo_grenade_limit_total 4",
@@ -167,6 +164,6 @@ public partial class CompetitiveMatch
             "sv_voiceenable 1",
             "sv_vote_command_delay 0",
             "tv_relayvoice 1"
-        });
+        ]);
     }
 }

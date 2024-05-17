@@ -7,7 +7,6 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -19,11 +18,10 @@ public partial class CompetitiveMatch
     public void OnChangeMatchBotFill(object? sender, bool value)
     {
         var quota = value ? match_max_players.Value : 0;
-        ExecuteCommands(new List<string>
-        {
+        ExecuteCommands([
             "bot_quota_mode fill",
             $"bot_quota {quota}"
-        });
+        ]);
     }
 
     public void OnMapStart(string mapname)
@@ -35,9 +33,7 @@ public partial class CompetitiveMatch
     {
         if (!IsInitialized)
         {
-            MatchMap = new(/* @todo: for premade matches, pass here default stuff */);
-            OnChangeMatchBotFill(null, match_bot_fill.Value);
-            ExecuteWarmup();
+            StartWarmup();
             IsInitialized = true;
         }
 

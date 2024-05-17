@@ -10,6 +10,13 @@ namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
 {
+    public void StartWarmup()
+    {
+        MatchMap = new(/* @todo: for premade matches, pass here default stuff */);
+        OnChangeMatchBotFill(null, match_bot_fill.Value);
+        ExecuteWarmup();
+    }
+
     public void TryStartMatch()
     {
         var players = MatchMap.Players.Values.Where(state => state.IsReady);
