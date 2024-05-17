@@ -117,10 +117,10 @@ public partial class CompetitiveMatch
                 var startingTeam = GetPlayerState(player).StartingTeam;
                 if (gameRules != null && mp_maxrounds != null && mp_overtime_maxrounds != null)
                 {
-                    var totalRounds = gameRules.TotalRoundsPlayed;
-                    var isHalfTime = totalRounds <= mp_maxrounds
-                        ? totalRounds > mp_maxrounds / 2
-                        : ((totalRounds - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
+                    var currentRound = gameRules.TotalRoundsPlayed + 1;
+                    var isHalfTime = currentRound <= mp_maxrounds
+                        ? currentRound > mp_maxrounds / 2
+                        : ((currentRound - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
                     var assignedTeam = isHalfTime
                         ? startingTeam == CsTeam.Terrorist
                             ? CsTeam.CounterTerrorist
@@ -272,7 +272,10 @@ public partial class CompetitiveMatch
             }
             else
             {
-                if (!Utilities.GetPlayers().Where(player => player.Connected == PlayerConnectedState.PlayerConnected).Any())
+                if (!Utilities.GetPlayers().Where(other =>
+                    other.IsBot == false &&
+                    other.SteamID != player.SteamID &&
+                    other.Connected == PlayerConnectedState.PlayerConnected).Any())
                 {
                     MatchForfeitTimer?.Kill();
                     MatchForfeitTimer = AddTimer(60.0f, () => StartForfeit(), TimerFlags.STOP_ON_MAPCHANGE);
