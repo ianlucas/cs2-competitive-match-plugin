@@ -92,4 +92,9 @@ public partial class CompetitiveMatch
                 break;
         }
     }
+
+    public void StartForfeit()
+    {
+        StartWarmup();
+    }
 }

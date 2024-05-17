@@ -14,6 +14,7 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_ready", "Mark yourself as ready.")]
     public void OnReadyCommand(CCSPlayerController? player, CommandInfo _)
     {
+        // @todo: check player can be ready.
         if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
         {
             GetPlayerState(player).IsReady = true;

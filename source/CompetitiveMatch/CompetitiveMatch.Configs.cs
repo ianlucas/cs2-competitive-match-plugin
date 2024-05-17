@@ -10,8 +10,8 @@ public partial class CompetitiveMatch
     public void ExecuteWarmup()
     {
         ExecuteCommands([
-            "bot_join_after_player 0",
             "bot_chatter off",
+            "bot_join_after_player 0",
             "mp_autoteambalance 0",
             "mp_ct_default_secondary weapon_hkp2000",
             "mp_death_drop_gun 0",

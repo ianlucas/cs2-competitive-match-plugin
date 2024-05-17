@@ -54,6 +54,7 @@ public partial class CompetitiveMatch
 
     public bool IsInitialized = false;
     public CCSGameRulesProxy? GameRulesProxy;
-    public readonly PlayerState BotState = new(null);
+    public CounterStrikeSharp.API.Modules.Timers.Timer? MatchForfeitTimer;
     public MatchMapState MatchMap = new();
+    public readonly PlayerState BotState = new(null);
 }

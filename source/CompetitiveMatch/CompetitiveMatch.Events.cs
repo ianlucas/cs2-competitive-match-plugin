@@ -7,6 +7,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -101,32 +102,39 @@ public partial class CompetitiveMatch
     public HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo _)
     {
         var player = @event.Userid;
-        // @todo: loaded matches must prevent player joining teams.
-        if (player?.IsBot == false && MatchMap.Phase != MatchPhase_t.Warmup)
+        if (player?.IsBot == false)
         {
-            var gameRules = GetGameRules();
-            var mp_maxrounds = ConVar.Find("mp_maxrounds")?.GetPrimitiveValue<int>();
-            var mp_overtime_maxrounds = ConVar.Find("mp_overtime_maxrounds")?.GetPrimitiveValue<int>();
-            var startingTeam = GetPlayerState(player).StartingTeam;
-            if (gameRules != null && mp_maxrounds != null && mp_overtime_maxrounds != null)
+            if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
-                var totalRounds = gameRules.TotalRoundsPlayed;
-                var isHalfTime = totalRounds <= mp_maxrounds
-                    ? totalRounds > mp_maxrounds / 2
-                    : ((totalRounds - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
-                var assignedTeam = isHalfTime
-                    ? startingTeam == CsTeam.Terrorist
-                        ? CsTeam.CounterTerrorist
-                        : CsTeam.Terrorist
-                    : startingTeam;
-                if (player.Team != assignedTeam)
-                {
-                    player.ChangeTeam(assignedTeam);
-                }
+                MatchForfeitTimer?.Kill();
             }
-            else
+            // @todo: loaded matches must prevent player joining teams.
+            if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
-                Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
+                var gameRules = GetGameRules();
+                var mp_maxrounds = ConVar.Find("mp_maxrounds")?.GetPrimitiveValue<int>();
+                var mp_overtime_maxrounds = ConVar.Find("mp_overtime_maxrounds")?.GetPrimitiveValue<int>();
+                var startingTeam = GetPlayerState(player).StartingTeam;
+                if (gameRules != null && mp_maxrounds != null && mp_overtime_maxrounds != null)
+                {
+                    var totalRounds = gameRules.TotalRoundsPlayed;
+                    var isHalfTime = totalRounds <= mp_maxrounds
+                        ? totalRounds > mp_maxrounds / 2
+                        : ((totalRounds - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
+                    var assignedTeam = isHalfTime
+                        ? startingTeam == CsTeam.Terrorist
+                            ? CsTeam.CounterTerrorist
+                            : CsTeam.Terrorist
+                        : startingTeam;
+                    if (player.Team != assignedTeam)
+                    {
+                        player.ChangeTeam(assignedTeam);
+                    }
+                }
+                else
+                {
+                    Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
+                }
             }
         }
         return HookResult.Continue;
@@ -256,11 +264,19 @@ public partial class CompetitiveMatch
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo _)
     {
         var player = @event.Userid;
-        if (player != null)
+        if (player?.IsBot == false)
         {
             if (MatchMap.Phase == MatchPhase_t.Warmup)
             {
                 MatchMap.Players.Remove(player.SteamID);
+            }
+            else
+            {
+                if (!Utilities.GetPlayers().Where(player => player.Connected == PlayerConnectedState.PlayerConnected).Any())
+                {
+                    MatchForfeitTimer?.Kill();
+                    MatchForfeitTimer = AddTimer(60.0f, () => StartForfeit(), TimerFlags.STOP_ON_MAPCHANGE);
+                }
             }
         }
         return HookResult.Continue;
