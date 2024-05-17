@@ -25,11 +25,12 @@ public enum KnifeVote_t
     Switch
 }
 
-public class PlayerState
+public class PlayerState(CCSPlayerController? player)
 {
     public bool IsReady = false;
     public CsTeam StartingTeam = CsTeam.None;
     public KnifeVote_t KnifeVote = KnifeVote_t.None;
+    public CCSPlayerController? Controller = player;
 }
 
 public partial class CompetitiveMatch
@@ -48,5 +49,5 @@ public partial class CompetitiveMatch
     public Dictionary<ulong, PlayerState> PlayerStateManager = [];
     public CsTeam KnifeWinner = CsTeam.None; // @todo: need to be reseted
     public CCSGameRulesProxy? GameRulesProxy;
-    public readonly PlayerState BotState = new();
+    public readonly PlayerState BotState = new(null);
 }

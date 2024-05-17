@@ -10,23 +10,26 @@ namespace CompetitiveMatch;
 
 public partial class CompetitiveMatch
 {
-    // try start match is triggered only when players are using !ready.
     public void TryStartMatch()
     {
-        var players = Utilities.GetPlayers();
-        if (players.Count == match_max_players.Value)
+        var players = PlayerStateManager.Values.Where(state => state.IsReady);
+        if (players.Count() == match_max_players.Value)
         {
-            foreach (var player in players)
-            {
-                GetPlayerState(player).StartingTeam = player.Team;
-            }
-            // @todo check if players are ready!
             StartMatch();
         }
     }
 
     public void StartMatch()
     {
+        foreach (var playerState in PlayerStateManager.Values)
+        {
+            var player = playerState.Controller;
+            if (player != null)
+            {
+                playerState.IsReady = true;
+                playerState.StartingTeam = player.Team;
+            }
+        }
         ExecuteKnife();
         Phase = MatchPhase_t.Knife;
     }

@@ -27,7 +27,7 @@ public partial class CompetitiveMatch
         {
             return state;
         }
-        var newState = new PlayerState();
+        var newState = new PlayerState(player);
         PlayerStateManager[player.SteamID] = newState;
         return newState;
     }
