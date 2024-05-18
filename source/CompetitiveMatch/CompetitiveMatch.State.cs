@@ -52,9 +52,9 @@ public partial class CompetitiveMatch
     public readonly FakeConVar<bool> match_whitelist = new("match_whitelist", "Whether use whitelist.", false);
     public readonly FakeConVar<string> match_hostname = new("match_hostname", "Hostname of the match.", "Competitive Match");
 
-    public readonly PlayerState BotState = new(null);
-    public MatchMapState MatchMap = new();
-    public CounterStrikeSharp.API.Modules.Timers.Timer? MatchForfeitTimer;
-    public CCSGameRulesProxy? GameRulesProxy;
     public bool IsInitialized = false;
+    public CCSGameRulesProxy? GameRulesProxy;
+    public CounterStrikeSharp.API.Modules.Timers.Timer? MatchForfeitTimer;
+    public MatchMapState MatchMap = new();
+    public readonly PlayerState BotState = new(null);
 }

@@ -20,8 +20,7 @@ public partial class CompetitiveMatch
             "mp_warmup_pausetimer 1",
             "mp_warmup_start",
             "mp_weapons_allow_typecount -1",
-            "sv_hibernate_when_empty 0",
-            "sv_vote_issue_kick_allowed 0"
+            "sv_hibernate_when_empty 0"
         ]);
     }
 
@@ -165,7 +164,6 @@ public partial class CompetitiveMatch
             "sv_talk_enemy_living 0",
             "sv_voiceenable 1",
             "sv_vote_command_delay 0",
-            "sv_vote_issue_surrrender_allowed 1",
             "tv_relayvoice 1"
         ]);
     }
