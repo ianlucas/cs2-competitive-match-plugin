@@ -178,6 +178,19 @@ public partial class CompetitiveMatch
         return HookResult.Continue;
     }
 
+    public HookResult OnRoundMvp(EventRoundMvp _, GameEventInfo __)
+    {
+        if (MatchMap.Phase == MatchPhase_t.Knife)
+        {
+            foreach (var player in Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller").Where(
+                        player => player is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }))
+            {
+                player.MVPs = 0;
+            }
+        }
+        return HookResult.Continue;
+    }
+
     public HookResult OnRoundEndPre(EventRoundEnd @event, GameEventInfo _)
     {
         if (MatchMap.Phase == MatchPhase_t.Knife)

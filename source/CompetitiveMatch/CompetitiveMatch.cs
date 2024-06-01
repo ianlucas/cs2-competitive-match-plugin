@@ -25,6 +25,7 @@ public partial class CompetitiveMatch : BasePlugin
         AddCommandListener("jointeam", OnPlayerJoinTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
         RegisterEventHandler<EventItemPickup>(OnItemPickup);
+        RegisterEventHandler<EventRoundMvp>(OnRoundMvp, HookMode.Pre);
         RegisterEventHandler<EventRoundEnd>(OnRoundEndPre, HookMode.Pre);
         RegisterEventHandler<EventCsWinPanelMatch>(OnCsWinPanelMatch);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
