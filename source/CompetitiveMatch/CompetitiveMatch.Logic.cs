@@ -5,6 +5,8 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Utils;
 
 namespace CompetitiveMatch;
 
@@ -13,6 +15,8 @@ public partial class CompetitiveMatch
     public void StartWarmup()
     {
         MatchMap = new(/* @todo: for premade matches, pass here default stuff */);
+        ConVar.Find("mp_teamname_1")?.SetValue<string>("");
+        ConVar.Find("mp_teamname_2")?.SetValue<string>("");
         OnChangeMatchBotFill(null, match_bot_fill.Value);
         ExecuteWarmup();
     }
@@ -35,6 +39,16 @@ public partial class CompetitiveMatch
             {
                 playerState.IsReady = true;
                 playerState.StartingTeam = player.Team;
+                playerState.Name = player.PlayerName;
+                var teamIndex = player.TeamNum - 2;
+                var team = MatchMap.Teams[teamIndex];
+                if (team.LeaderSteamID == 0)
+                {
+                    team.LeaderSteamID = player.SteamID;
+                    team.LeaderName = player.PlayerName;
+                    team.Name = $"team_{player.PlayerName}";
+                    Server.ExecuteCommand($"mp_teamname_{teamIndex + 1} {team.Name}");
+                }
             }
         }
         ExecuteKnife();
@@ -50,30 +64,66 @@ public partial class CompetitiveMatch
         }
     }
 
+    public void AnnounceKnifeVote()
+    {
+        var winnerTeam = MatchMap.Teams[(byte)MatchMap.KnifeWinner - 2];
+        if (winnerTeam.Name != "")
+        {
+            Server.PrintToChatAll($"{{green}}[MATCH] Team {winnerTeam.Name} won the knife round, {winnerTeam.LeaderName} needs to !switch or !switch.");
+        }
+    }
+
     public void TryStartLive()
     {
-        var winnerPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam == MatchMap.KnifeWinner);
-        var votesNeeded = (int)Math.Ceiling(winnerPlayers.Count() / 2.0);
-        foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
+        if (!MatchMap.KnifeVoteDemocracy)
         {
-            var count = MatchMap.Players.Values.Where(state => state.KnifeVote == knifeVote).Count();
-            if (count == votesNeeded)
+            var winnerTeam = MatchMap.Teams[(byte)MatchMap.KnifeWinner - 2];
+            foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
             {
-                MatchMap.KnifeVoteDecision = knifeVote;
-                if (knifeVote == KnifeVote_t.Switch)
+                if (MatchMap.Players.Where(player => player.Value.KnifeVote == knifeVote && player.Key == winnerTeam.LeaderSteamID).Any())
                 {
-                    var otherPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam != MatchMap.KnifeWinner);
-                    foreach (var player in otherPlayers)
-                    {
-                        player.StartingTeam = ToggleTeam(player.StartingTeam);
-                    }
-                    foreach (var player in winnerPlayers)
-                    {
-                        player.StartingTeam = ToggleTeam(player.StartingTeam);
-                    }
+                    SetKnifeDecision(knifeVote);
                 }
-                StartLive();
-                return;
+            }
+        }
+        else
+        {
+            var winnerPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam == MatchMap.KnifeWinner);
+            var votesNeeded = (int)Math.Ceiling(winnerPlayers.Count() / 2.0);
+            foreach (var knifeVote in new List<KnifeVote_t> { KnifeVote_t.Stay, KnifeVote_t.Switch })
+            {
+                var count = MatchMap.Players.Values.Where(state => state.KnifeVote == knifeVote).Count();
+                if (count == votesNeeded)
+                {
+                    SetKnifeDecision(knifeVote);
+                    StartLive();
+                    return;
+                }
+            }
+        }
+
+    }
+
+    public void SetKnifeDecision(KnifeVote_t knifeVote)
+    {
+        MatchMap.KnifeVoteDecision = knifeVote;
+        var winnerTeam = MatchMap.Teams[(byte)MatchMap.KnifeWinner - 2];
+        if (winnerTeam.Name != "")
+        {
+            var decision = knifeVote == KnifeVote_t.Switch ? "switch sides" : "stay";
+            Server.PrintToChatAll($"{{green}} Team {winnerTeam.Name} decided to {decision}!");
+        }
+        if (knifeVote == KnifeVote_t.Switch)
+        {
+            var winnerPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam == MatchMap.KnifeWinner);
+            var otherPlayers = MatchMap.Players.Values.Where(state => state.StartingTeam != MatchMap.KnifeWinner);
+            foreach (var player in otherPlayers)
+            {
+                player.StartingTeam = ToggleTeam(player.StartingTeam);
+            }
+            foreach (var player in winnerPlayers)
+            {
+                player.StartingTeam = ToggleTeam(player.StartingTeam);
             }
         }
     }

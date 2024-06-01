@@ -28,26 +28,10 @@ public partial class CompetitiveMatch
             return state;
         }
         var newState = new PlayerState(player);
+        newState.Name = player.PlayerName;
         MatchMap.Players[player.SteamID] = newState;
         return newState;
     }
-
-    private void SetPlayerMoveType(CCSPlayerController player, MoveType_t moveType)
-    {
-        var pawn = player.PlayerPawn.Value;
-        if (pawn != null)
-        {
-            pawn.MoveType = moveType;
-            pawn.ActualMoveType = moveType;
-
-            Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
-        }
-    }
-
-    // @todo: minor issue, but player may be sent flying if they jump right before we freeze them...
-    private void FreezePlayer(CCSPlayerController player) => SetPlayerMoveType(player, MoveType_t.MOVETYPE_NONE);
-    // @todo: remove if not needed
-    private void UnfreezePlayer(CCSPlayerController player) => SetPlayerMoveType(player, MoveType_t.MOVETYPE_WALK);
 
     // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L281
     public (int alivePlayers, int totalHealth) GetAlivePlayers(CsTeam team)
@@ -79,7 +63,7 @@ public partial class CompetitiveMatch
     }
 
     // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L464
-    public CsTeam GetKnifeWinner()
+    public CsTeam EvaluateKnifeWinner()
     {
         (int tAlive, int tHealth) = GetAlivePlayers(CsTeam.Terrorist);
         (int ctAlive, int ctHealth) = GetAlivePlayers(CsTeam.CounterTerrorist);
@@ -102,7 +86,7 @@ public partial class CompetitiveMatch
         return (CsTeam)(new Random()).Next(2, 4);
     }
 
-    public string GetCallForActionString(string color, string state, string description, string? timeLeft = null)
+    public string GetCallForActionString(string color, string state, string description)
     {
         var builder = new StringBuilder();
         builder.Append("<b><font class='fontSize-s' color='silver'>");
@@ -113,11 +97,6 @@ public partial class CompetitiveMatch
         builder.Append(state);
         builder.Append("</font><br>");
         builder.Append(description);
-        if (timeLeft != null)
-        {
-            builder.Append("<br><br>");
-            builder.Append(timeLeft);
-        }
         return builder.ToString();
     }
 
@@ -139,23 +118,5 @@ public partial class CompetitiveMatch
     public long Now()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-    }
-
-    public long DiffNow(long value)
-    {
-        return Now() - value;
-    }
-
-    public string FormatTimeLeft(long startedAt, long totalTime)
-    {
-        long elapsedTime = DiffNow(startedAt);
-        if (elapsedTime >= totalTime)
-        {
-            return "0:00";
-        }
-        long timeLeft = totalTime - elapsedTime;
-        long minutesLeft = timeLeft / 60;
-        long secondsLeft = timeLeft % 60;
-        return $"{minutesLeft}:{secondsLeft:D2}";
     }
 }

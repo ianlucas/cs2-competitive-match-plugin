@@ -17,8 +17,12 @@ public partial class CompetitiveMatch
         // @todo: check player can be ready.
         if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
         {
-            GetPlayerState(player).IsReady = true;
-            TryStartMatch();
+            var readyCount = MatchMap.Players.Values.Where(other => other.IsReady && other.StartingTeam == player.Team).Count();
+            if (readyCount < (match_max_players.Value / 2))
+            {
+                GetPlayerState(player).IsReady = true;
+                TryStartMatch();
+            }
         }
     }
 

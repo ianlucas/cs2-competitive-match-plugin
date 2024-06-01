@@ -31,6 +31,14 @@ public class PlayerState(CCSPlayerController? player)
     public CsTeam StartingTeam = CsTeam.None;
     public KnifeVote_t KnifeVote = KnifeVote_t.None;
     public CCSPlayerController? Controller = player;
+    public string Name = "";
+}
+
+public class MatchTeam
+{
+    public string Name = "";
+    public ulong LeaderSteamID = 0;
+    public string LeaderName = "";
 }
 
 public class MatchMapState
@@ -38,10 +46,9 @@ public class MatchMapState
     public CsTeam KnifeWinner = CsTeam.None;
     public Dictionary<ulong, PlayerState> Players = [];
     public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
-    public long KnifeStartedAt = 0;
-    public long KnifeVoteStartedAt = 0;
-    public long LiveStartedAt = 0;
     public MatchPhase_t Phase = MatchPhase_t.Warmup;
+    public List<MatchTeam> Teams = [new(), new()];
+    public bool KnifeVoteDemocracy = false;
 }
 
 
@@ -55,6 +62,7 @@ public partial class CompetitiveMatch
     public bool IsInitialized = false;
     public CCSGameRulesProxy? GameRulesProxy;
     public CounterStrikeSharp.API.Modules.Timers.Timer? MatchForfeitTimer;
+    public CounterStrikeSharp.API.Modules.Timers.Timer? KnifeVoteTimer;
     public MatchMapState MatchMap = new();
     public readonly PlayerState BotState = new(null);
 }
