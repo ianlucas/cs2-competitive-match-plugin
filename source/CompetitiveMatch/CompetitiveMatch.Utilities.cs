@@ -5,6 +5,7 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
@@ -118,5 +119,14 @@ public partial class CompetitiveMatch
     public long Now()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    }
+
+    public void UpdateStringConVar(string name, string value)
+    {
+        var conVar = ConVar.Find(name);
+        if (conVar != null)
+        {
+            conVar.StringValue = value;
+        }
     }
 }

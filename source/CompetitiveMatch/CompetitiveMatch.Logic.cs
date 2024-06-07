@@ -15,8 +15,8 @@ public partial class CompetitiveMatch
     public void StartWarmup()
     {
         MatchMap = new(/* @todo: for premade matches, pass here default stuff */);
-        ConVar.Find("mp_teamname_1")?.SetValue<string>("");
-        ConVar.Find("mp_teamname_2")?.SetValue<string>("");
+        UpdateStringConVar("mp_teamname_1", "");
+        UpdateStringConVar("mp_teamname_2", "");
         OnChangeMatchBotFill(null, match_bot_fill.Value);
         ExecuteWarmup();
     }

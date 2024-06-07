@@ -63,11 +63,6 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player?.IsBot == false)
         {
-            if (MatchMap.Phase == MatchPhase_t.Warmup)
-            {
-                player.ChangeTeam(CsTeam.Spectator);
-            }
-
             if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
                 MatchForfeitTimer?.Kill();
@@ -112,13 +107,16 @@ public partial class CompetitiveMatch
         {
             if (GetPlayerState(player).IsReady)
             {
+                player.PrintToChat("You are ready.");
                 return HookResult.Stop;
             }
             if (MatchMap.Phase != MatchPhase_t.Warmup)
             {
+                player.PrintToChat("Not warmup.");
                 return HookResult.Stop;
             }
         }
+        player?.PrintToChat("Joining team...");
         return HookResult.Continue;
     }
 
