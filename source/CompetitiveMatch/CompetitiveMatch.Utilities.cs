@@ -6,6 +6,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
@@ -18,20 +19,45 @@ public partial class CompetitiveMatch
         commands.ForEach(command => Server.ExecuteCommand(command));
     }
 
+    public MatchTeamState GetPlayerTeam(CCSPlayerController player)
+    {
+        foreach (var teamState in Match.Teams)
+        {
+            if (teamState.Players.ContainsKey(player.SteamID))
+            {
+                return teamState;
+            }
+        }
+        return GetTeamState(player.Team);
+    }
+
     public PlayerState GetPlayerState(CCSPlayerController player)
     {
-        if (player.IsBot)
+        foreach (var teamState in Match.Teams)
         {
-            return BotState;
+            if (teamState.Players.TryGetValue(player.SteamID, out var state))
+            {
+                return state;
+            }
         }
-        if (MatchMap.Players.TryGetValue(player.SteamID, out var state))
+        return GetPlayerTeam(player).AddPlayer(player);
+    }
+
+    public MatchTeamState GetTeamState(CsTeam team)
+    {
+        foreach (var teamState in Match.Teams)
         {
-            return state;
+            if (teamState.StartingTeam == team)
+            {
+                return teamState;
+            }
         }
-        var newState = new PlayerState(player);
-        newState.Name = player.PlayerName;
-        MatchMap.Players[player.SteamID] = newState;
-        return newState;
+        throw new Exception("Team not found.");
+    }
+
+    public bool IsPlayerInATeam(CCSPlayerController player)
+    {
+        return player.Team == CsTeam.Terrorist || player.Team == CsTeam.CounterTerrorist;
     }
 
     // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L281
@@ -64,7 +90,7 @@ public partial class CompetitiveMatch
     }
 
     // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L464
-    public CsTeam EvaluateKnifeWinner()
+    public CsTeam EvaluateKnifeWinnerTeam()
     {
         (int tAlive, int tHealth) = GetAlivePlayers(CsTeam.Terrorist);
         (int ctAlive, int ctHealth) = GetAlivePlayers(CsTeam.CounterTerrorist);
@@ -91,7 +117,7 @@ public partial class CompetitiveMatch
     {
         var builder = new StringBuilder();
         builder.Append("<b><font class='fontSize-s' color='silver'>");
-        builder.Append(match_hostname.Value);
+        builder.Append(match_servername.Value);
         builder.Append("</font><b/><br><font class='fontSize-l' color='");
         builder.Append(color);
         builder.Append("'>");
@@ -121,12 +147,43 @@ public partial class CompetitiveMatch
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
     }
 
-    public void UpdateStringConVar(string name, string value)
+    public void SetStringConVar(string name, string value)
     {
         var conVar = ConVar.Find(name);
         if (conVar != null)
         {
             conVar.StringValue = value;
         }
+    }
+
+    public void PrintToChatAll3x(string value)
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            Server.PrintToChatAll(value);
+        }
+    }
+
+    public void KillAllTimers()
+    {
+        foreach (var timer in MatchTimers.Values)
+        {
+            timer.Kill();
+        }
+    }
+    
+    public void KillTimer(TimerType_t type)
+    {
+        if (MatchTimers.TryGetValue(type, out var timer))
+        {
+            timer.Kill();
+        }
+        MatchTimers.Remove(type);
+    }
+
+    public void CreateTimer(TimerType_t type, float interval, Action callback, TimerFlags? flags = null)
+    {
+        KillTimer(type);
+        MatchTimers[type] = AddTimer(interval, callback, flags);
     }
 }

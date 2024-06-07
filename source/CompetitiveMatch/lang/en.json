@@ -1,0 +1,7 @@
+{
+  "match.knife": "{green}[{0}] KNIFE!",
+  "match.knife_vote": "{green}[{0}] Team {1} won the knife round, {2} needs to !stay or !switch.",
+  "match.knife_decision": "{green}[{0}] Team {1} decided to {2}!",
+  "match.live": "{green}[{0}] LIVE!",
+  "match.live_disclaimer": "{green}[{0}] Please be aware that this match has overtime enabled, there is no tie."
+}

@@ -14,13 +14,12 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_ready", "Mark yourself as ready.")]
     public void OnReadyCommand(CCSPlayerController? player, CommandInfo _)
     {
-        // @todo: check player can be ready.
-        if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
+        if (player != null && Match.Phase == MatchPhase_t.Warmup && IsPlayerInATeam(player))
         {
-            var readyCount = MatchMap.Players.Values.Where(other => other.IsReady && other.StartingTeam == player.Team).Count();
-            if (readyCount < (match_max_players.Value / 2))
+            var playerState = GetPlayerState(player);
+            if (playerState.Team.Players.Count < (match_max_players.Value / 2))
             {
-                GetPlayerState(player).IsReady = true;
+                playerState.IsReady = true;
                 TryStartMatch();
             }
         }
@@ -29,9 +28,9 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_stay", "Vote to stay in the current team.")]
     public void OnStayCommand(CCSPlayerController? player, CommandInfo _)
     {
-        if (player != null && MatchMap.Phase == MatchPhase_t.KnifeVote)
+        if (player != null && Match.Phase == MatchPhase_t.KnifeVote)
         {
-            AssignPlayerKnifeVote(player, KnifeVote_t.Stay);
+            GetPlayerState(player).KnifeVote = KnifeVote_t.Stay;
             TryStartLive();
         }
     }
@@ -39,9 +38,9 @@ public partial class CompetitiveMatch
     [ConsoleCommand("css_switch", "Vote to switch team side.")]
     public void OnSwitchCommand(CCSPlayerController? player, CommandInfo _)
     {
-        if (player != null && MatchMap.Phase == MatchPhase_t.KnifeVote)
+        if (player != null && Match.Phase == MatchPhase_t.KnifeVote)
         {
-            AssignPlayerKnifeVote(player, KnifeVote_t.Switch);
+            GetPlayerState(player).KnifeVote = KnifeVote_t.Switch;
             TryStartLive();
         }
     }
@@ -50,7 +49,7 @@ public partial class CompetitiveMatch
     public void OnStartCommand(CCSPlayerController? player, CommandInfo _)
     {
         // @TODO: Check if player is @css/admin.
-        if (player != null && MatchMap.Phase == MatchPhase_t.Warmup)
+        if (player != null && Match.Phase == MatchPhase_t.Warmup)
         {
             StartMatch();
         }
@@ -60,7 +59,7 @@ public partial class CompetitiveMatch
     public void OnRestartCommand(CCSPlayerController? player, CommandInfo _)
     {
         // @TODO: Check if player is @css/admin.
-        if (player != null && MatchMap.Phase != MatchPhase_t.Warmup)
+        if (player != null && Match.Phase != MatchPhase_t.Warmup)
         {
             StartWarmup();
         }

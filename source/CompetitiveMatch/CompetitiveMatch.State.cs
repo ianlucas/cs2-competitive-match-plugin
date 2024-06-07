@@ -13,8 +13,9 @@ public enum MatchPhase_t
 {
     Warmup,
     Knife,
+    PreKnifeVote,
     KnifeVote,
-    LiveFirstRound,
+    PreLive,
     Live
 }
 
@@ -25,44 +26,80 @@ public enum KnifeVote_t
     Switch
 }
 
-public class PlayerState(CCSPlayerController? player)
+public enum TimerType_t
+{
+    KnifeVote,
+    MatchForfeit
+}
+
+public class PlayerState(MatchTeamState team, CCSPlayerController player)
 {
     public bool IsReady = false;
-    public CsTeam StartingTeam = CsTeam.None;
     public KnifeVote_t KnifeVote = KnifeVote_t.None;
-    public CCSPlayerController? Controller = player;
-    public string Name = "";
+    public string Name = player.PlayerName;
+    public ulong SteamID = player.SteamID;
+    public MatchTeamState Team = team;
 }
 
-public class MatchTeam
+public class MatchTeamState(CsTeam team)
 {
     public string Name = "";
-    public ulong LeaderSteamID = 0;
-    public string LeaderName = "";
-}
-
-public class MatchMapState
-{
-    public CsTeam KnifeWinner = CsTeam.None;
+    public PlayerState? Leader;
     public Dictionary<ulong, PlayerState> Players = [];
-    public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
-    public MatchPhase_t Phase = MatchPhase_t.Warmup;
-    public List<MatchTeam> Teams = [new(), new()];
-    public bool KnifeVoteDemocracy = false;
+    public CsTeam StartingTeam = team;
+
+    public PlayerState AddPlayer(CCSPlayerController player)
+    {
+        var playerState = new PlayerState(this, player);
+        Players[playerState.SteamID] = playerState;
+        if (Leader == null)
+        {
+            Leader = playerState;
+            Name = $"team_{playerState.Name}";
+        }
+        return playerState;
+    }
+
+    public void RemovePlayer(CCSPlayerController player)
+    {
+        if (Leader?.SteamID == player.SteamID)
+        {
+            Leader = null;
+            Name = "";
+        }
+        Players.Remove(player.SteamID);
+    }
 }
 
+public class MatchState
+{
+    public List<MatchTeamState> Teams = [new(CsTeam.Terrorist), new(CsTeam.CounterTerrorist)];
+
+    public MatchPhase_t Phase = MatchPhase_t.Warmup;
+    public MatchTeamState? KnifeWinnerTeam;
+    public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
+
+    public void Reset()
+    {
+        Teams = [new(CsTeam.Terrorist), new(CsTeam.CounterTerrorist)];
+        Phase = MatchPhase_t.Warmup;
+        KnifeVoteDecision = KnifeVote_t.None;
+        KnifeWinnerTeam = null;
+    }
+}
 
 public partial class CompetitiveMatch
 {
     public readonly FakeConVar<bool> match_bot_fill = new("match_bot_fill", "Whether to fill vacant slots with bots.", true);
     public readonly FakeConVar<int> match_max_players = new("match_max_players", "Max players in the match.", 10);
     public readonly FakeConVar<bool> match_whitelist = new("match_whitelist", "Whether use whitelist.", false);
-    public readonly FakeConVar<string> match_hostname = new("match_hostname", "Hostname of the match.", "Competitive Match");
+    public readonly FakeConVar<string> match_servername = new("match_servername", "Name of the server.", "MATCH^");
+
+    public readonly float ChatInterval = 15.0f;
 
     public bool IsInitialized = false;
     public CCSGameRulesProxy? GameRulesProxy;
-    public CounterStrikeSharp.API.Modules.Timers.Timer? MatchForfeitTimer;
-    public CounterStrikeSharp.API.Modules.Timers.Timer? KnifeVoteTimer;
-    public MatchMapState MatchMap = new();
-    public readonly PlayerState BotState = new(null);
+    public MatchState Match = new();
+
+    public Dictionary<TimerType_t, CounterStrikeSharp.API.Modules.Timers.Timer> MatchTimers = [];
 }

@@ -15,7 +15,9 @@ public partial class CompetitiveMatch
             "mp_autoteambalance 0",
             "mp_ct_default_secondary weapon_hkp2000",
             "mp_death_drop_gun 0",
+            "mp_free_armor 0",
             "mp_limitteams 0",
+            "mp_team_intro_time 6.5",
             "mp_t_default_secondary weapon_glock",
             seconds > -1 ? $"mp_warmuptime {seconds}" : "mp_warmup_pausetimer 1",
             "mp_warmup_start",
@@ -163,7 +165,11 @@ public partial class CompetitiveMatch
             "sv_talk_enemy_living 0",
             "sv_voiceenable 1",
             "sv_vote_command_delay 0",
-            "tv_relayvoice 1"
+            "tv_relayvoice 1",
+
+            // Then end warmup.
+            "mp_warmup_end",
+            "mp_warmup_pausetimer 0"
         ]);
     }
 }
