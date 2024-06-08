@@ -21,6 +21,7 @@ public partial class CompetitiveMatch
                 break;
 
             case MatchPhase_t.PreLive:
+                KillTimer(Timer_t.CommandsPrinter);
                 KillTimer(Timer_t.KnifeVoteTimeout);
                 KillTimer(Timer_t.KnifeVotePrinter);
                 ExecuteLive();
