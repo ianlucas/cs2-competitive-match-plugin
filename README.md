@@ -17,7 +17,7 @@
 ## Installation
 
 1. Install the latest release of [Metamod and CounterStrikeSharp](https://docs.cssharp.dev/docs/guides/getting-started.html).
-2. [Download the latest release](https://github.com/ianlucas/cs2-inventory-simulator-plugin/releases) of CS2 Competitive Match Plugin.
+2. [Download the latest release](https://github.com/ianlucas/cs2-competitive-match-plugin/releases) of CS2 Competitive Match Plugin.
 3. Extract the ZIP file contents into `addons/counterstrikesharp`.
 
 ### Configuration
