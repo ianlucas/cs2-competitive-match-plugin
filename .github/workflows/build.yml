@@ -33,13 +33,13 @@ jobs:
         run: dotnet build
 
       - name: Increment version and create zip
-        id: create-zip
         run: |
-          zip_file="CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip"
-          zip -r $zip_file bin/Release/*
+          zip -r CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip bin/Release/*
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - name: Release
+        id: release
+        uses: softprops/action-gh-release@v1
         with:
-          name: build-artifact
-          path: ${{ steps.create-zip.outputs.zipfile }}
+          tag_name: v${{ needs.setup.outputs.buildnumber }}
+          files: |
+            CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip
