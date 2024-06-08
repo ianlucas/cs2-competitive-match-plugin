@@ -136,13 +136,13 @@ public partial class CompetitiveMatch
             case MatchPhase_t.PreKnifeVote:
                 Match.Phase = MatchPhase_t.KnifeVote;
                 AnnounceKnifeVote();
-                CreateTimer(TimerType_t.KnifeVote, ChatInterval, AnnounceKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                CreateTimer(TimerType_t.KnifeVotePrint, ChatInterval, AnnounceKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                CreateTimer(TimerType_t.KnifeVoteTimeout, 59.0f, StartLive, TimerFlags.STOP_ON_MAPCHANGE);
                 ExecuteWarmup(60);
                 break;
 
             case MatchPhase_t.PreLive:
                 Match.Phase = MatchPhase_t.Live;
-                KillTimer(TimerType_t.KnifeVote);
                 PrintToChatAll3x(Localizer["match.live", match_servername.Value]);
                 Server.PrintToChatAll(Localizer["match.live_disclaimer", match_servername.Value]);
                 break;
@@ -216,11 +216,6 @@ public partial class CompetitiveMatch
                 {
                     Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
                 }
-                break;
-
-            case MatchPhase_t.KnifeVote:
-                KillTimer(TimerType_t.KnifeVote);
-                StartLive();
                 break;
         }
         return HookResult.Continue;

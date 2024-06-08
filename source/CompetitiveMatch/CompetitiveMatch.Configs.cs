@@ -16,6 +16,7 @@ public partial class CompetitiveMatch
             "mp_ct_default_secondary weapon_hkp2000",
             "mp_death_drop_gun 0",
             "mp_free_armor 0",
+            "mp_halftime 0",
             "mp_limitteams 0",
             "mp_team_intro_time 6.5",
             "mp_t_default_secondary weapon_glock",
@@ -41,7 +42,7 @@ public partial class CompetitiveMatch
             "mp_t_default_secondary \"\"",
             "mp_team_intro_time 0",
             "mp_teamcashawards 0",
-
+            
             // ...then run these
             "mp_warmup_end",
             "mp_warmup_pausetimer 0"
@@ -167,7 +168,7 @@ public partial class CompetitiveMatch
             "sv_vote_command_delay 0",
             "tv_relayvoice 1",
 
-            // Then end warmup.
+            // ...then end warmup.
             "mp_warmup_end",
             "mp_warmup_pausetimer 0"
         ]);

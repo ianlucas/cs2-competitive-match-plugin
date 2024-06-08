@@ -15,6 +15,7 @@ public partial class CompetitiveMatch
 {
     public void StartWarmup()
     {
+        KillAllTimers();
         Match.Reset();
         OnChangeMatchBotFill(null, match_bot_fill.Value);
         ExecuteWarmup();
@@ -60,10 +61,11 @@ public partial class CompetitiveMatch
             if (Match.KnifeWinnerTeam != null &&
                 Match.KnifeWinnerTeam.Players.Where(player => player.Value.KnifeVote == vote && player.Key == Match.KnifeWinnerTeam.Leader?.SteamID).Any())
             {
-                KillTimer(TimerType_t.KnifeVote);
+                KillTimer(TimerType_t.KnifeVoteTimeout);
+                KillTimer(TimerType_t.KnifeVotePrint);
                 Match.KnifeVoteDecision = vote;
                 var decision = vote == KnifeVote_t.Switch ? "switch sides" : "stay";
-                Server.PrintToChatAll(Localizer["match.knife_vote", match_servername.Value, Match.KnifeWinnerTeam.Name, decision]);
+                Server.PrintToChatAll(Localizer["match.knife_decision", match_servername.Value, Match.KnifeWinnerTeam.Name, decision]);
                 if (vote == KnifeVote_t.Switch)
                 {
                     (Match.Teams[1].StartingTeam, Match.Teams[0].StartingTeam) = (Match.Teams[0].StartingTeam, Match.Teams[1].StartingTeam);
@@ -75,17 +77,19 @@ public partial class CompetitiveMatch
 
     public void StartLive()
     {
+        KillTimer(TimerType_t.KnifeVoteTimeout);
+        KillTimer(TimerType_t.KnifeVotePrint);
         Match.Phase = MatchPhase_t.PreLive;
-        ExecuteLive();
         switch (Match.KnifeVoteDecision)
         {
             case KnifeVote_t.Switch:
-                Server.ExecuteCommand("mp_swapteams");
-                break;
-            default:
-                Server.ExecuteCommand("mp_restartgame 1");
+                foreach (var player in Utilities.GetPlayers().Where(p => p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist))
+                {
+                    player.ChangeTeam(ToggleTeam(player.Team));
+                }
                 break;
         }
+        ExecuteLive();
     }
 
     public void StartForfeit()

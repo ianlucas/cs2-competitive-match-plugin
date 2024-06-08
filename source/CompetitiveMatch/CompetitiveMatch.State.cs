@@ -28,7 +28,8 @@ public enum KnifeVote_t
 
 public enum TimerType_t
 {
-    KnifeVote,
+    KnifeVotePrint,
+    KnifeVoteTimeout,
     MatchForfeit
 }
 
