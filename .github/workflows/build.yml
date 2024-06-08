@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - name: Generate build number
         id: buildnumber
