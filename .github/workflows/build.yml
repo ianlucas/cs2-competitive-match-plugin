@@ -34,7 +34,7 @@ jobs:
 
       - name: Increment version and create zip
         run: |
-          zip -r CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip bin/Release/*
+          (cd bin/Release && zip -r ../../CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip .)
 
       - name: Release
         id: release
