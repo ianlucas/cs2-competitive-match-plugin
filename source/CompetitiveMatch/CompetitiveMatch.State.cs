@@ -28,12 +28,13 @@ public enum KnifeVote_t
 
 public enum TimerType_t
 {
+    CommandsPrint,
     KnifeVotePrint,
     KnifeVoteTimeout,
     MatchForfeit
 }
 
-public class PlayerState(MatchTeamState team, CCSPlayerController player)
+public class MatchPlayerState(MatchTeamState team, CCSPlayerController player)
 {
     public bool IsReady = false;
     public KnifeVote_t KnifeVote = KnifeVote_t.None;
@@ -45,13 +46,13 @@ public class PlayerState(MatchTeamState team, CCSPlayerController player)
 public class MatchTeamState(CsTeam team)
 {
     public string Name = "";
-    public PlayerState? Leader;
-    public Dictionary<ulong, PlayerState> Players = [];
+    public MatchPlayerState? Leader;
+    public Dictionary<ulong, MatchPlayerState> Players = [];
     public CsTeam StartingTeam = team;
 
-    public PlayerState AddPlayer(CCSPlayerController player)
+    public MatchPlayerState AddPlayer(CCSPlayerController player)
     {
-        var playerState = new PlayerState(this, player);
+        var playerState = new MatchPlayerState(this, player);
         Players[playerState.SteamID] = playerState;
         if (Leader == null)
         {

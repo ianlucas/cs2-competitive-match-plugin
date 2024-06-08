@@ -40,20 +40,12 @@ public partial class CompetitiveMatch
 
         if (Match.Phase == MatchPhase_t.Warmup)
         {
-            foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot))
+            foreach (var player in Utilities.GetPlayers().Where(player => !player.IsBot && IsPlayerInATeam(player)))
             {
-                if (player.Team != CsTeam.Terrorist &&
-                    player.Team != CsTeam.CounterTerrorist)
+                if (GetPlayerState(player)?.IsReady == false)
                 {
-                    continue;
+                    player.PrintToCenterAlert(Localizer["match.not_ready"]);
                 }
-                var builder = new StringBuilder();
-                var isReady = GetPlayerState(player)?.IsReady == true;
-                player.PrintToCenterHtml(
-                    GetCallForActionString(
-                        color: isReady ? "lime" : "red",
-                        state: isReady ? "READY" : "NOT READY",
-                        description: isReady ? "Waiting other players..." : "Type !ready (to be ready)."));
             }
         }
     }
@@ -134,15 +126,15 @@ public partial class CompetitiveMatch
                 break;
 
             case MatchPhase_t.PreKnifeVote:
-                Match.Phase = MatchPhase_t.KnifeVote;
-                AnnounceKnifeVote();
-                CreateTimer(TimerType_t.KnifeVotePrint, ChatInterval, AnnounceKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                SetPhase(MatchPhase_t.KnifeVote);
+                PrintKnifeVote();
+                CreateTimer(TimerType_t.KnifeVotePrint, ChatInterval, PrintKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                 CreateTimer(TimerType_t.KnifeVoteTimeout, 59.0f, StartLive, TimerFlags.STOP_ON_MAPCHANGE);
                 ExecuteWarmup(60);
                 break;
 
             case MatchPhase_t.PreLive:
-                Match.Phase = MatchPhase_t.Live;
+                SetPhase(MatchPhase_t.Live);
                 PrintToChatAll3x(Localizer["match.live", match_servername.Value]);
                 Server.PrintToChatAll(Localizer["match.live_disclaimer", match_servername.Value]);
                 break;
@@ -210,7 +202,7 @@ public partial class CompetitiveMatch
                     gameRules.RoundEndFunFactData1 = 0;
                     gameRules.RoundEndFunFactPlayerSlot = 0;
                     Match.KnifeWinnerTeam = GetTeamState(knifeWinnerTeam);
-                    Match.Phase = MatchPhase_t.PreKnifeVote;
+                    SetPhase(MatchPhase_t.PreKnifeVote);
                 }
                 else
                 {

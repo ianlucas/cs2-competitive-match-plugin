@@ -1,4 +1,9 @@
 {
+  "match.not_ready": "You are not !ready",
+  "match.commands": "{green}[{0}] Available commands:",
+  "match.commands_ready": "{green}- !ready to mark yourself as ready",
+  "match.commands_gg": "{green}- !gg to launch a forfeit vote during the match",
+  "match.commands_pause": "{green}- !pause to toggle freeze time pause",
   "match.knife": "{green}[{0}] KNIFE!",
   "match.knife_vote": "{green}[{0}] Team {1} won the knife round, {2} needs to !stay or !switch.",
   "match.knife_decision": "{green}[{0}] Team {1} decided to {2}!",

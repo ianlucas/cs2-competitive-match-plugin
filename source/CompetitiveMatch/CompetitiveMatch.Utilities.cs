@@ -9,6 +9,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
+using System.Xml;
 
 namespace CompetitiveMatch;
 
@@ -19,40 +20,31 @@ public partial class CompetitiveMatch
         commands.ForEach(command => Server.ExecuteCommand(command));
     }
 
-    public MatchTeamState GetPlayerTeam(CCSPlayerController player)
+    public bool IsPlayerInMatch(CCSPlayerController player)
     {
-        foreach (var teamState in Match.Teams)
-        {
-            if (teamState.Players.ContainsKey(player.SteamID))
-            {
-                return teamState;
-            }
-        }
-        return GetTeamState(player.Team);
+        return Match.Teams.Any(teamState => teamState.Players.ContainsKey(player.SteamID));
     }
 
-    public PlayerState GetPlayerState(CCSPlayerController player)
+    public MatchTeamState GetPlayerTeam(CCSPlayerController player)
     {
-        foreach (var teamState in Match.Teams)
-        {
-            if (teamState.Players.TryGetValue(player.SteamID, out var state))
-            {
-                return state;
-            }
-        }
-        return GetPlayerTeam(player).AddPlayer(player);
+        return Match.Teams
+            .FirstOrDefault(teamState => teamState.Players.ContainsKey(player.SteamID))
+            ?? GetTeamState(player.Team);
+    }
+
+    public MatchPlayerState GetPlayerState(CCSPlayerController player)
+    {
+        return Match.Teams
+            .SelectMany(teamState => teamState.Players)
+            .FirstOrDefault(kvp => kvp.Key == player.SteamID).Value
+            ?? GetPlayerTeam(player).AddPlayer(player);
     }
 
     public MatchTeamState GetTeamState(CsTeam team)
     {
-        foreach (var teamState in Match.Teams)
-        {
-            if (teamState.StartingTeam == team)
-            {
-                return teamState;
-            }
-        }
-        throw new Exception("Team not found.");
+        return Match.Teams
+            .FirstOrDefault(ts => ts.StartingTeam == team)
+            ?? throw new Exception("Team not found.");
     }
 
     public bool IsPlayerInATeam(CCSPlayerController player)
@@ -60,71 +52,34 @@ public partial class CompetitiveMatch
         return player.Team == CsTeam.Terrorist || player.Team == CsTeam.CounterTerrorist;
     }
 
-    // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L281
     public (int alivePlayers, int totalHealth) GetAlivePlayers(CsTeam team)
     {
-        int count = 0;
-        int totalHealth = 0;
-        Utilities.GetPlayers().ForEach(player =>
-        {
-            var playerPawn = player.PlayerPawn.Value;
-            var pawn = player.Pawn.Value;
-            if (player.Team == team)
-            {
-                if (player.IsBot)
-                {
-                    if (pawn != null)
-                    {
-                        if (pawn.Health > 0) count++;
-                        totalHealth += pawn.Health;
-                    }
-                }
-                else if (playerPawn != null)
-                {
-                    if (playerPawn.Health > 0) count++;
-                    totalHealth += playerPawn.Health;
-                }
-            }
-        });
-        return (count, totalHealth);
+        var players = Utilities.GetPlayers().Where(player => player.Team == team);
+
+        int alive = players.Count(player =>
+            (player.IsBot ? player.Pawn?.Value : player.PlayerPawn?.Value)?.Health > 0);
+
+        int health = players.Sum(player =>
+            (player.IsBot ? player.Pawn?.Value : player.PlayerPawn?.Value)?.Health ?? 0);
+
+        return (alive, health);
     }
 
-    // Adapted from https://github.com/shobhit-pathak/MatchZy/blob/b4e4800bda5a72064a72a295695faeef28e3d12f/Utility.cs#L464
     public CsTeam EvaluateKnifeWinnerTeam()
     {
         (int tAlive, int tHealth) = GetAlivePlayers(CsTeam.Terrorist);
         (int ctAlive, int ctHealth) = GetAlivePlayers(CsTeam.CounterTerrorist);
-        if (ctAlive > tAlive)
-        {
-            return CsTeam.CounterTerrorist;
-        }
-        else if (tAlive > ctAlive)
-        {
-            return CsTeam.Terrorist;
-        }
-        else if (ctHealth > tHealth)
-        {
-            return CsTeam.CounterTerrorist;
-        }
-        else if (tHealth > ctHealth)
-        {
-            return CsTeam.Terrorist;
-        }
-        return (CsTeam)(new Random()).Next(2, 4);
-    }
 
-    public string GetCallForActionString(string color, string state, string description)
-    {
-        var builder = new StringBuilder();
-        builder.Append("<b><font class='fontSize-s' color='silver'>");
-        builder.Append(match_servername.Value);
-        builder.Append("</font><b/><br><font class='fontSize-l' color='");
-        builder.Append(color);
-        builder.Append("'>");
-        builder.Append(state);
-        builder.Append("</font><br>");
-        builder.Append(description);
-        return builder.ToString();
+        if (ctAlive != tAlive)
+        {
+            return ctAlive > tAlive ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+        }
+        if (ctHealth != tHealth)
+        {
+            return ctHealth > tHealth ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+        }
+
+        return (CsTeam)(new Random()).Next(2, 4);
     }
 
     public CCSGameRules? GetGameRules()
@@ -171,7 +126,7 @@ public partial class CompetitiveMatch
             timer.Kill();
         }
     }
-    
+
     public void KillTimer(TimerType_t type)
     {
         if (MatchTimers.TryGetValue(type, out var timer))
