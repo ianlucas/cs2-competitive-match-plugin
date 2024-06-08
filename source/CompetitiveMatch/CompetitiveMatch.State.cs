@@ -5,38 +5,37 @@
 
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 
 namespace CompetitiveMatch;
 
-public enum MatchPhase_t
-{
-    Warmup,
-    Knife,
-    PreKnifeVote,
-    KnifeVote,
-    PreLive,
-    Live
-}
-
-public enum KnifeVote_t
-{
-    None,
-    Stay,
-    Switch
-}
-
-public enum Timer_t
-{
-    CommandsPrinter,
-    KnifeVotePrinter,
-    KnifeVoteTimeout,
-    MatchForfeit
-}
-
 public partial class CompetitiveMatch
 {
+    public enum MatchPhase_t
+    {
+        Warmup,
+        Knife,
+        PreKnifeVote,
+        KnifeVote,
+        PreLive,
+        Live
+    }
+
+    public enum KnifeVote_t
+    {
+        None,
+        Stay,
+        Switch
+    }
+
+    public enum Timer_t
+    {
+        CommandsPrinter,
+        KnifeVotePrinter,
+        KnifeVoteTimeout,
+        MatchForfeit
+    }
+
     public class MatchTeamPlayerState(MatchTeamState team, CCSPlayerController player)
     {
         public bool IsReady = false;
@@ -123,6 +122,6 @@ public partial class CompetitiveMatch
     public bool IsInitialized = false;
     public MatchState Match = new();
     public Dictionary<Timer_t, CounterStrikeSharp.API.Modules.Timers.Timer> MatchTimers = [];
-    
+
     static CCSGameRulesProxy? GameRulesProxy;
 }
