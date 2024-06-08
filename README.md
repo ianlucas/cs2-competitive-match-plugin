@@ -2,6 +2,8 @@
 
 > A minimalist [CounterStrikeSharp](https://docs.cssharp.dev) plugin for running Counter-Strike 2 matches
 
+The goal is to create the minimal API for supporting both match creation on-the-fly (for players inside the server) and through a match file. This plugin does not create additional folders in your game server installation. In-game System-wise the plugin tries to emulate FACEIT matches.
+
 ## Current Features
 
 - Ready system
@@ -26,7 +28,7 @@
 
 * Whether to fill vacant slots with bots. (Not recommended for performance.)
 * **Type:** `bool`
-* **Default:** `false`
+* **Default:** `true`
 
 #### `match_max_players` ConVar
 
