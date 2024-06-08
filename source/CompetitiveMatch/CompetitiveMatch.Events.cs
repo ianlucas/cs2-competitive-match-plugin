@@ -30,13 +30,22 @@ public partial class CompetitiveMatch
             {
                 try
                 {
-                    var team = GetPlayerTeam(player);
-                    var expectedTeam = team.ToCsTeam();
-                    if (expectedTeam != null && player.Team != expectedTeam)
+                    if (IsPlayerInMatch(player))
                     {
-                        player.ChangeTeam(expectedTeam.Value);
+                        var team = GetPlayerTeam(player);
+                        var expectedTeam = team.ToCsTeam();
+                        if (expectedTeam != null && player.Team != expectedTeam)
+                        {
+                            player.ChangeTeam(expectedTeam.Value);
+                        }
                     }
-                } catch
+                    else
+                    {
+                        // @todo: kick player
+                        player.ChangeTeam(CsTeam.Spectator);
+                    }
+                }
+                catch
                 {
                     // @todo: kick player
                     player.ChangeTeam(CsTeam.Spectator);
