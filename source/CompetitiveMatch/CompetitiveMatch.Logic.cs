@@ -46,7 +46,7 @@ public partial class CompetitiveMatch
     public void StartWarmup()
     {
         KillAllTimers();
-        Match.Reset();
+        Match = new();
         OnChangeMatchBotFill(null, match_bot_fill.Value);
         ExecuteWarmup();
         CreateTimer(TimerType_t.CommandsPrint, ChatInterval, PrintCommands, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
@@ -83,9 +83,9 @@ public partial class CompetitiveMatch
     public void PrintKnifeVote()
     {
         var team = Match.KnifeWinnerTeam;
-        if (team != null && team.Name != "" && team.Leader != null)
+        if (team != null && team.Leader != null)
         {
-            Server.PrintToChatAll(Localizer["match.knife_vote", match_servername.Value, team.Name, team.Leader.Name]);
+            Server.PrintToChatAll(Localizer["match.knife_vote", match_servername.Value, GetTeamName(team), team.Leader.Name]);
         }
     }
 
@@ -97,11 +97,14 @@ public partial class CompetitiveMatch
                 Match.KnifeWinnerTeam.Players.Where(player => player.Value.KnifeVote == vote && player.Key == Match.KnifeWinnerTeam.Leader?.SteamID).Any())
             {
                 Match.KnifeVoteDecision = vote;
-                var decision = vote == KnifeVote_t.Switch ? "switch sides" : "stay";
-                Server.PrintToChatAll(Localizer["match.knife_decision", match_servername.Value, Match.KnifeWinnerTeam.Name, decision]);
+                var decision = Localizer[vote == KnifeVote_t.Switch ? "match.knife_decision_switch" : "match.knife_decision_switch"];
+                Server.PrintToChatAll(Localizer["match.knife_decision", match_servername.Value, GetTeamName(Match.KnifeWinnerTeam), decision]);
                 if (vote == KnifeVote_t.Switch)
                 {
-                    (Match.Teams[1].StartingTeam, Match.Teams[0].StartingTeam) = (Match.Teams[0].StartingTeam, Match.Teams[1].StartingTeam);
+                    foreach (var team in Match.Teams)
+                    {
+                        team.StartingTeam = ToggleTeam(team.StartingTeam);
+                    }
                 }
                 StartLive();
             }

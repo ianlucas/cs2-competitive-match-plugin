@@ -103,29 +103,18 @@ public partial class CompetitiveMatch
             // @todo: loaded matches must prevent player joining teams.
             if (Match.Phase != MatchPhase_t.Warmup)
             {
-                var gameRules = GetGameRules();
-                var mp_maxrounds = ConVar.Find("mp_maxrounds")?.GetPrimitiveValue<int>();
-                var mp_overtime_maxrounds = ConVar.Find("mp_overtime_maxrounds")?.GetPrimitiveValue<int>();
-                var startingTeam = GetPlayerTeam(player).StartingTeam;
-                if (gameRules != null && mp_maxrounds != null && mp_overtime_maxrounds != null)
+                try
                 {
-                    var currentRound = gameRules.TotalRoundsPlayed + 1;
-                    var isHalfTime = currentRound <= mp_maxrounds
-                        ? currentRound > mp_maxrounds / 2
-                        : ((currentRound - mp_maxrounds - 1) % mp_overtime_maxrounds) + 1 > mp_overtime_maxrounds / 3;
-                    var expectedTeam = isHalfTime
-                        ? startingTeam == CsTeam.Terrorist
-                            ? CsTeam.CounterTerrorist
-                            : CsTeam.Terrorist
-                        : startingTeam;
-                    if (player.Team != expectedTeam)
+                    var team = GetPlayerTeam(player);
+                    var expectedTeam = team.ToCsTeam();
+                    if (expectedTeam != null && player.Team != expectedTeam)
                     {
-                        player.ChangeTeam(expectedTeam);
+                        player.ChangeTeam(expectedTeam.Value);
                     }
-                }
-                else
+                } catch
                 {
-                    Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
+                    // @todo: kick player
+                    player.ChangeTeam(CsTeam.Spectator);
                 }
             }
         }
@@ -278,7 +267,7 @@ public partial class CompetitiveMatch
                     other.SteamID != player.SteamID &&
                     other.Connected == PlayerConnectedState.PlayerConnected).Any())
                 {
-                    CreateTimer(TimerType_t.MatchForfeit, 60.0f, () => StartForfeit(), TimerFlags.STOP_ON_MAPCHANGE);
+                    CreateTimer(TimerType_t.MatchForfeit, 60.0f, StartForfeit, TimerFlags.STOP_ON_MAPCHANGE);
                 }
             }
         }

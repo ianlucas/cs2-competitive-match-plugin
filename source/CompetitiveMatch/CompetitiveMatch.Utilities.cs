@@ -31,7 +31,7 @@ public partial class CompetitiveMatch
             ?? GetTeamState(player.Team);
     }
 
-    public MatchPlayerState GetPlayerState(CCSPlayerController player)
+    public MatchTeamPlayerState GetPlayerState(CCSPlayerController player)
     {
         return Match.Teams
             .SelectMany(teamState => teamState.Players)
@@ -81,7 +81,7 @@ public partial class CompetitiveMatch
         return (CsTeam)(new Random()).Next(2, 4);
     }
 
-    public CCSGameRules? GetGameRules()
+    public static CCSGameRules? GetGameRules()
     {
         if (GameRulesProxy?.IsValid == true)
         {
@@ -91,7 +91,7 @@ public partial class CompetitiveMatch
         return GameRulesProxy?.GameRules;
     }
 
-    public CsTeam ToggleTeam(CsTeam team)
+    public static CsTeam ToggleTeam(CsTeam team)
     {
         return team == CsTeam.CounterTerrorist ? CsTeam.Terrorist : CsTeam.CounterTerrorist;
     }
@@ -149,5 +149,24 @@ public partial class CompetitiveMatch
             Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
             new GameEvent("nextlevel_changed", false).FireEvent(false);
         }
+    }
+
+    public string GetCsTeamName(CsTeam team)
+    {
+        return Localizer[team == CsTeam.Terrorist ? "match.t" : "match.ct"];
+    }
+
+    public string GetTeamName(MatchTeamState teamState)
+    {
+        if (teamState.Name != null)
+        {
+            return teamState.Name;
+        }
+        var team = teamState.ToCsTeam();
+        if (team != null)
+        {
+            return GetCsTeamName(team.Value);
+        }
+        return "Unknown";
     }
 }
