@@ -21,6 +21,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Update module version
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sed -i 's/ModuleVersion => "1.0.0"/ModuleVersion => "1.${{ steps.buildnumber.outputs.build_number }}.0"/g' source/CompetitiveMatch/CompetitiveMatch.cs
+
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
