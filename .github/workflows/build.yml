@@ -1,0 +1,44 @@
+name: Build and Package
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Generate build number
+        id: buildnumber
+        uses: onyxmueller/build-tag-number@v1
+        with:
+          token: ${{secrets.github_token}}     
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build
+
+      - name: Increment version and create zip
+        id: create-zip
+        run: |
+          zip_file="CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip"
+          zip -r $zip_file bin/Release/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: ${{ steps.create-zip.outputs.zipfile }}
