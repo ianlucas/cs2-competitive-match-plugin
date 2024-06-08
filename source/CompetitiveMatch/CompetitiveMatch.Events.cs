@@ -7,6 +7,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
@@ -46,9 +47,10 @@ public partial class CompetitiveMatch
             {
                 foreach (var player in players)
                 {
-                    if (!player.IsBot && IsPlayerInATeam(player) && GetPlayerState(player)?.IsReady == false)
+                    if (!player.IsBot)
                     {
-                        player.PrintToCenterAlert(Localizer["match.not_ready"]);
+                        var isReady = IsPlayerInATeam(player) && GetPlayerState(player)?.IsReady == true;
+                        SetPlayerClan(player, Localizer[isReady ? "match.ready" : "match.not_ready"]);
                     }
                 }
             }
@@ -217,8 +219,7 @@ public partial class CompetitiveMatch
         {
             case MatchPhase_t.Knife:
                 var gameRules = GetGameRules();
-                //var team = EvaluateKnifeWinnerTeam();
-                var team = CsTeam.Terrorist;
+                var team = EvaluateKnifeWinnerTeam();
                 if (gameRules != null)
                 {
                     var reason = 10;

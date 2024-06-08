@@ -68,6 +68,11 @@ public partial class CompetitiveMatch
             foreach (var player in team.Players.Values)
             {
                 player.IsReady = true;
+                var controller = Utilities.GetPlayerFromSteamId(player.SteamID);
+                if (controller != null)
+                {
+                    SetPlayerClan(controller, "");
+                }
             }
             var teamNameIndex = team.StartingTeam == CsTeam.Terrorist ? 2 : 1;
             Server.ExecuteCommand($"mp_teamname_{teamNameIndex} {team.Name}");

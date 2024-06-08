@@ -1,5 +1,6 @@
 {
-  "match.not_ready": "You are not !ready",
+  "match.not_ready": "[NOT READY]",
+  "match.ready": "[READY]",
   "match.commands": "{green}[{0}] Available commands:",
   "match.commands_ready": "{green}- !ready to mark yourself as ready",
   "match.commands_gg": "{green}- !gg to launch a forfeit vote during the match",

@@ -6,6 +6,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 
@@ -138,5 +139,15 @@ public partial class CompetitiveMatch
     {
         KillTimer(type);
         MatchTimers[type] = AddTimer(interval, callback, flags);
+    }
+
+    public void SetPlayerClan(CCSPlayerController player, string clan)
+    {
+        if (player.Clan != clan)
+        {
+            player.Clan = clan;
+            Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
+            new GameEvent("nextlevel_changed", false).FireEvent(false);
+        }
     }
 }
