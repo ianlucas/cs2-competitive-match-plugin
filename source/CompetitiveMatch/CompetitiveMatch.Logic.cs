@@ -78,7 +78,7 @@ public partial class CompetitiveMatch
             var teamNameIndex = team.StartingTeam == CsTeam.Terrorist ? 2 : 1;
             Server.ExecuteCommand($"mp_teamname_{teamNameIndex} {team.Name}");
         }
-        SetPhase(MatchPhase_t.Knife);
+        SetPhase(match_knife_round_enabled.Value ? MatchPhase_t.Knife : MatchPhase_t.PreLive);
     }
 
     public void PrintKnifeVote()

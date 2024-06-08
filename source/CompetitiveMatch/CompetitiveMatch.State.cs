@@ -113,8 +113,8 @@ public partial class CompetitiveMatch
 
     public readonly FakeConVar<bool> match_bot_fill = new("match_bot_fill", "Whether to fill vacant slots with bots.", true);
     public readonly FakeConVar<int> match_max_players = new("match_max_players", "Max players in the match.", 10);
-    public readonly FakeConVar<bool> match_whitelist = new("match_whitelist", "Whether use whitelist.", false);
     public readonly FakeConVar<string> match_servername = new("match_servername", "Name of the server.", "MATCH^");
+    public readonly FakeConVar<bool> match_knife_round_enabled = new("match_knife_round_enabled", "Whether knife round is enabled.", true);
 
     public readonly float ChatInterval = 15.0f;
     public readonly List<CsTeam> MatchTeams = [CsTeam.Terrorist, CsTeam.CounterTerrorist];
