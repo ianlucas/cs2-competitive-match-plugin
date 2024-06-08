@@ -32,7 +32,7 @@ jobs:
       - name: Build the project
         run: dotnet build
 
-      - name: Increment version and create zip
+      - name: Zip release
         run: |
           (cd bin/Release && zip -r ../../CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip .)
 
@@ -40,6 +40,7 @@ jobs:
         id: release
         uses: softprops/action-gh-release@v1
         with:
+          body: CompetitiveMatch v${{ steps.buildnumber.outputs.build_number }}
           tag_name: v${{ steps.buildnumber.outputs.build_number }}
           files: |
             CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip
