@@ -40,6 +40,6 @@ jobs:
         id: release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.setup.outputs.buildnumber }}
+          tag_name: v${{ steps.buildnumber.outputs.build_number }}
           files: |
             CompetitiveMatch-v${{ steps.buildnumber.outputs.build_number }}.zip
