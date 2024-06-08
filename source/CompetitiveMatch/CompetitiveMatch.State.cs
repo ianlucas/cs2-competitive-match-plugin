@@ -98,6 +98,7 @@ public partial class CompetitiveMatch
     public readonly FakeConVar<string> match_servername = new("match_servername", "Name of the server.", "MATCH^");
 
     public readonly float ChatInterval = 15.0f;
+    public readonly List<CsTeam> MatchTeams = [CsTeam.Terrorist, CsTeam.CounterTerrorist];
 
     public bool IsInitialized = false;
     public CCSGameRulesProxy? GameRulesProxy;

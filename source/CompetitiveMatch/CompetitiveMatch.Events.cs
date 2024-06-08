@@ -7,6 +7,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
@@ -38,13 +39,52 @@ public partial class CompetitiveMatch
             IsInitialized = true;
         }
 
-        if (Match.Phase == MatchPhase_t.Warmup)
+        if (Match.Phase == MatchPhase_t.Warmup ||
+            match_bot_fill.Value)
         {
-            foreach (var player in Utilities.GetPlayers().Where(player => !player.IsBot && IsPlayerInATeam(player)))
+            var players = Utilities.GetPlayers();
+
+            if (Match.Phase == MatchPhase_t.Warmup)
             {
-                if (GetPlayerState(player)?.IsReady == false)
+                foreach (var player in players)
                 {
-                    player.PrintToCenterAlert(Localizer["match.not_ready"]);
+                    if (!player.IsBot && IsPlayerInATeam(player) && GetPlayerState(player)?.IsReady == false)
+                    {
+                        player.PrintToCenterAlert(Localizer["match.not_ready"]);
+                    }
+                }
+            }
+
+            if (match_bot_fill.Value)
+            {
+                var maxPlayers = match_max_players.Value / 2;
+                foreach (var team in MatchTeams)
+                {
+                    int botCount = 0;
+                    int humanCount = 0;
+                    int? botToKick = null;
+                    foreach (var player in players)
+                    {
+                        if (player.Team == team)
+                        {
+                            if (player.IsBot)
+                            {
+                                botCount++;
+                                if (botToKick == null && player.UserId != null)
+                                {
+                                    botToKick = player.UserId;
+                                }
+                            }
+                            else
+                            {
+                                humanCount++;
+                            }
+                        }
+                    }
+                    if (botCount + humanCount > maxPlayers && botToKick != null)
+                    {
+                        Server.ExecuteCommand($"kickid {botToKick}");
+                    }
                 }
             }
         }
@@ -179,12 +219,13 @@ public partial class CompetitiveMatch
         {
             case MatchPhase_t.Knife:
                 var gameRules = GetGameRules();
-                var knifeWinnerTeam = EvaluateKnifeWinnerTeam();
+                //var team = EvaluateKnifeWinnerTeam();
+                var team = CsTeam.Terrorist;
                 if (gameRules != null)
                 {
                     var reason = 10;
                     var message = "";
-                    switch (knifeWinnerTeam)
+                    switch (team)
                     {
                         case CsTeam.CounterTerrorist:
                             reason = 8;
@@ -198,10 +239,10 @@ public partial class CompetitiveMatch
                     gameRules.RoundEndReason = reason;
                     gameRules.RoundEndFunFactToken = "";
                     gameRules.RoundEndMessage = message;
-                    gameRules.RoundEndWinnerTeam = (int)knifeWinnerTeam;
+                    gameRules.RoundEndWinnerTeam = (int)team;
                     gameRules.RoundEndFunFactData1 = 0;
                     gameRules.RoundEndFunFactPlayerSlot = 0;
-                    Match.KnifeWinnerTeam = GetTeamState(knifeWinnerTeam);
+                    Match.KnifeWinnerTeam = GetTeamState(team);
                     SetPhase(MatchPhase_t.PreKnifeVote);
                 }
                 else
