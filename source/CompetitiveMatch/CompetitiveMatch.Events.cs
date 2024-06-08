@@ -9,7 +9,6 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace CompetitiveMatch;
 
@@ -22,7 +21,7 @@ public partial class CompetitiveMatch
         {
             if (Match.Phase != MatchPhase_t.Warmup)
             {
-                KillTimer(TimerType_t.MatchForfeit);
+                KillTimer(Timer_t.MatchForfeit);
             }
 
             // @todo: loaded matches must prevent player joining teams.
@@ -91,8 +90,8 @@ public partial class CompetitiveMatch
             case MatchPhase_t.PreKnifeVote:
                 SetPhase(MatchPhase_t.KnifeVote);
                 PrintKnifeVote();
-                CreateTimer(TimerType_t.KnifeVotePrint, ChatInterval, PrintKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
-                CreateTimer(TimerType_t.KnifeVoteTimeout, 59.0f, StartLive, TimerFlags.STOP_ON_MAPCHANGE);
+                CreateTimer(Timer_t.KnifeVotePrinter, ChatInterval, PrintKnifeVote, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                CreateTimer(Timer_t.KnifeVoteTimeout, 59.0f, StartLive, TimerFlags.STOP_ON_MAPCHANGE);
                 ExecuteWarmup(60);
                 break;
 
@@ -110,6 +109,7 @@ public partial class CompetitiveMatch
         var player = @event.Userid;
         if (player != null)
         {
+            //-- Infinite money on warmup.
             if (GetGameRules()?.WarmupPeriod == true)
             {
                 var inGameMoneyServices = player.InGameMoneyServices;
@@ -125,10 +125,11 @@ public partial class CompetitiveMatch
 
     public HookResult OnRoundMvpPre(EventRoundMvp _, GameEventInfo __)
     {
+        //-- Disables MVP on knife round.
         if (Match.Phase == MatchPhase_t.Knife)
         {
-            foreach (var player in Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller").Where(
-                        player => player is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }))
+            var players = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
+            foreach (var player in players.Where(IsPlayerConnected))
             {
                 player.MVPs = 0;
             }
@@ -140,37 +141,12 @@ public partial class CompetitiveMatch
     {
         switch (Match.Phase)
         {
+            //-- When knife round ends, assign winner team and goes to knife vote.
             case MatchPhase_t.Knife:
-                var gameRules = GetGameRules();
                 var team = EvaluateKnifeWinnerTeam();
-                if (gameRules != null)
-                {
-                    var reason = 10;
-                    var message = "";
-                    switch (team)
-                    {
-                        case CsTeam.CounterTerrorist:
-                            reason = 8;
-                            message = "#SFUI_Notice_CTs_Win";
-                            break;
-                        case CsTeam.Terrorist:
-                            reason = 9;
-                            message = "#SFUI_Notice_Terrorists_Win";
-                            break;
-                    }
-                    gameRules.RoundEndReason = reason;
-                    gameRules.RoundEndFunFactToken = "";
-                    gameRules.RoundEndMessage = message;
-                    gameRules.RoundEndWinnerTeam = (int)team;
-                    gameRules.RoundEndFunFactData1 = 0;
-                    gameRules.RoundEndFunFactPlayerSlot = 0;
-                    Match.KnifeWinnerTeam = GetTeamState(team);
-                    SetPhase(MatchPhase_t.PreKnifeVote);
-                }
-                else
-                {
-                    Logger.LogCritical("[CompetitiveMatch] Unable to get CCSGameRules.");
-                }
+                OverwriteRoundEndPanel(team);
+                Match.KnifeWinnerTeam = GetTeamState(team);
+                SetPhase(MatchPhase_t.PreKnifeVote);
                 break;
         }
         return HookResult.Continue;
@@ -178,10 +154,11 @@ public partial class CompetitiveMatch
 
     public HookResult OnCsWinPanelMatch(EventCsWinPanelMatch _, GameEventInfo __)
     {
+        //-- When match ends, restarts to warmup.
         var mp_match_restart_delay = ConVar.Find("mp_match_restart_delay")?.GetPrimitiveValue<int>();
         var restartDelay = mp_match_restart_delay != null ? mp_match_restart_delay - 1 : 1;
         // @todo: handle next map here.
-        AddTimer((float)restartDelay, () => StartWarmup());
+        AddTimer((float)restartDelay, StartWarmup, TimerFlags.STOP_ON_MAPCHANGE);
         return HookResult.Continue;
     }
 
@@ -196,12 +173,13 @@ public partial class CompetitiveMatch
             }
             else
             {
+                //-- Handle players disconnecting mid-game (forfeit system).
                 if (!Utilities.GetPlayers().Where(other =>
                     other.IsBot == false &&
                     other.SteamID != player.SteamID &&
                     other.Connected == PlayerConnectedState.PlayerConnected).Any())
                 {
-                    CreateTimer(TimerType_t.MatchForfeit, 60.0f, StartForfeit, TimerFlags.STOP_ON_MAPCHANGE);
+                    CreateTimer(Timer_t.MatchForfeit, 60.0f, StartForfeit, TimerFlags.STOP_ON_MAPCHANGE);
                 }
             }
         }

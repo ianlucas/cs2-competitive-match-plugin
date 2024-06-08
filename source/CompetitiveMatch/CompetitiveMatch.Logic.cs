@@ -16,13 +16,14 @@ public partial class CompetitiveMatch
         switch (phase)
         {
             case MatchPhase_t.Knife:
-                KillTimer(TimerType_t.CommandsPrint);
+                KillTimer(Timer_t.CommandsPrinter);
                 ExecuteKnife();
                 break;
 
             case MatchPhase_t.PreLive:
-                KillTimer(TimerType_t.KnifeVoteTimeout);
-                KillTimer(TimerType_t.KnifeVotePrint);
+                KillTimer(Timer_t.KnifeVoteTimeout);
+                KillTimer(Timer_t.KnifeVotePrinter);
+                ExecuteLive();
                 break;
         }
         Match.Phase = phase;
@@ -49,7 +50,7 @@ public partial class CompetitiveMatch
         Match = new();
         OnChangeMatchBotFill(null, match_bot_fill.Value);
         ExecuteWarmup();
-        CreateTimer(TimerType_t.CommandsPrint, ChatInterval, PrintCommands, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        CreateTimer(Timer_t.CommandsPrinter, ChatInterval, PrintCommands, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
     }
 
     public void TryStartMatch()
@@ -96,7 +97,6 @@ public partial class CompetitiveMatch
             if (Match.KnifeWinnerTeam != null &&
                 Match.KnifeWinnerTeam.Players.Where(player => player.Value.KnifeVote == vote && player.Key == Match.KnifeWinnerTeam.Leader?.SteamID).Any())
             {
-                Match.KnifeVoteDecision = vote;
                 var decision = Localizer[vote == KnifeVote_t.Switch ? "match.knife_decision_switch" : "match.knife_decision_switch"];
                 Server.PrintToChatAll(Localizer["match.knife_decision", match_servername.Value, GetTeamName(Match.KnifeWinnerTeam), decision]);
                 if (vote == KnifeVote_t.Switch)
@@ -104,6 +104,10 @@ public partial class CompetitiveMatch
                     foreach (var team in Match.Teams)
                     {
                         team.StartingTeam = ToggleTeam(team.StartingTeam);
+                    }
+                    foreach (var player in Utilities.GetPlayers().Where(IsPlayerInATeam))
+                    {
+                        player.ChangeTeam(ToggleTeam(player.Team));
                     }
                 }
                 StartLive();
@@ -114,16 +118,6 @@ public partial class CompetitiveMatch
     public void StartLive()
     {
         SetPhase(MatchPhase_t.PreLive);
-        switch (Match.KnifeVoteDecision)
-        {
-            case KnifeVote_t.Switch:
-                foreach (var player in Utilities.GetPlayers().Where(IsPlayerInATeam))
-                {
-                    player.ChangeTeam(ToggleTeam(player.Team));
-                }
-                break;
-        }
-        ExecuteLive();
     }
 
     public void StartForfeit()

@@ -27,10 +27,10 @@ public enum KnifeVote_t
     Switch
 }
 
-public enum TimerType_t
+public enum Timer_t
 {
-    CommandsPrint,
-    KnifeVotePrint,
+    CommandsPrinter,
+    KnifeVotePrinter,
     KnifeVoteTimeout,
     MatchForfeit
 }
@@ -110,7 +110,6 @@ public partial class CompetitiveMatch
         public List<MatchTeamState> Teams = [new(CsTeam.Terrorist), new(CsTeam.CounterTerrorist)];
         public MatchPhase_t Phase = MatchPhase_t.Warmup;
         public MatchTeamState? KnifeWinnerTeam;
-        public KnifeVote_t KnifeVoteDecision = KnifeVote_t.None;
     }
 
     public readonly FakeConVar<bool> match_bot_fill = new("match_bot_fill", "Whether to fill vacant slots with bots.", true);
@@ -123,7 +122,7 @@ public partial class CompetitiveMatch
 
     public bool IsInitialized = false;
     public MatchState Match = new();
-    public Dictionary<TimerType_t, CounterStrikeSharp.API.Modules.Timers.Timer> MatchTimers = [];
+    public Dictionary<Timer_t, CounterStrikeSharp.API.Modules.Timers.Timer> MatchTimers = [];
     
     static CCSGameRulesProxy? GameRulesProxy;
 }

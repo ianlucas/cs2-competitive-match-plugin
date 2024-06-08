@@ -51,6 +51,16 @@ public partial class CompetitiveMatch
         return player.Team == CsTeam.Terrorist || player.Team == CsTeam.CounterTerrorist;
     }
 
+    public bool IsPlayerConnected(CCSPlayerController player)
+    {
+        return player is
+        {
+            IsValid: true,
+            IsHLTV: false,
+            Connected: PlayerConnectedState.PlayerConnected
+        };
+    }
+
     public (int alivePlayers, int totalHealth) GetAlivePlayers(CsTeam team)
     {
         var players = Utilities.GetPlayers().Where(player => player.Team == team);
@@ -126,7 +136,7 @@ public partial class CompetitiveMatch
         }
     }
 
-    public void KillTimer(TimerType_t type)
+    public void KillTimer(Timer_t type)
     {
         if (MatchTimers.TryGetValue(type, out var timer))
         {
@@ -135,7 +145,7 @@ public partial class CompetitiveMatch
         MatchTimers.Remove(type);
     }
 
-    public void CreateTimer(TimerType_t type, float interval, Action callback, TimerFlags? flags = null)
+    public void CreateTimer(Timer_t type, float interval, Action callback, TimerFlags? flags = null)
     {
         KillTimer(type);
         MatchTimers[type] = AddTimer(interval, callback, flags);
@@ -168,5 +178,32 @@ public partial class CompetitiveMatch
             return GetCsTeamName(team.Value);
         }
         return "Unknown";
+    }
+
+    public void OverwriteRoundEndPanel(CsTeam team)
+    {
+        var gameRules = GetGameRules();
+        if (gameRules != null)
+        {
+            var reason = 10;
+            var message = "";
+            switch (team)
+            {
+                case CsTeam.CounterTerrorist:
+                    reason = 8;
+                    message = "#SFUI_Notice_CTs_Win";
+                    break;
+                case CsTeam.Terrorist:
+                    reason = 9;
+                    message = "#SFUI_Notice_Terrorists_Win";
+                    break;
+            }
+            gameRules.RoundEndReason = reason;
+            gameRules.RoundEndFunFactToken = "";
+            gameRules.RoundEndMessage = message;
+            gameRules.RoundEndWinnerTeam = (int)team;
+            gameRules.RoundEndFunFactData1 = 0;
+            gameRules.RoundEndFunFactPlayerSlot = 0;
+        }
     }
 }
