@@ -134,6 +134,7 @@ public partial class CompetitiveMatch
         {
             timer.Kill();
         }
+        MatchTimers.Clear();
     }
 
     public void KillTimer(Timer_t type)
